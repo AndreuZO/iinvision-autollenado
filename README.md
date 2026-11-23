@@ -11,7 +11,7 @@ reporte Blancco. Todo corre en tu navegador: no envía datos a ningún lado y **
 Para actualizarla después de un cambio: botón ⟳ de la extensión en esa misma página.
 
 ## Usar
-1. Abre la ficha del equipo (laptop).
+1. Abre la ficha del equipo (laptop o todo en uno).
 2. **Secure Track ▾ → Detailed Secure Track Report** para abrir el reporte al lado.
 3. Pulsa **Autollenar** (abajo a la derecha) y revisa el resumen.
 4. **Aplicar** llena solo los campos vacíos. Revisa y pulsa **Save** tú.
