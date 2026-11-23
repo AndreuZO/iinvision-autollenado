@@ -27,6 +27,10 @@ const tableRow = (doc, name) =>
 
 // Resuelve un Target.id a los elementos que lo controlan, o null si no existe en la ficha.
 function locate(doc, id) {
+  if (id === 'notes') {
+    const area = doc.querySelector('#notes textarea');
+    return area && { kind: 'text', area };
+  }
   const [kind, name] = id.includes(':') ? id.split(/:(.+)/) : ['radio', id];
   if (kind === 'radio') {
     const yes = doc.getElementById(name + '_true');
@@ -54,6 +58,7 @@ function locate(doc, id) {
 function readValue(loc) {
   if (loc.kind === 'radio') return loc.yes.checked ? true : loc.no?.checked ? false : 'unspecified';
   if (loc.kind === 'chk') return loc.box.checked;
+  if (loc.kind === 'text') return loc.area.value;
   return loc.input.value.trim();
 }
 
@@ -83,6 +88,14 @@ async function applyChange(doc, change) {
   const v = change.proposed;
   if (loc.kind === 'radio') (v ? loc.yes : loc.no).click();
   else if (loc.kind === 'chk') { if (v === true && !loc.box.checked) loc.box.click(); } // nunca desmarca
+  else if (loc.kind === 'text') {
+    // Como si el usuario escribiera: valor + evento input para que Angular lo registre.
+    loc.area.focus();
+    loc.area.value = v;
+    loc.area.dispatchEvent(new Event('input', { bubbles: true }));
+    loc.area.dispatchEvent(new Event('change', { bubbles: true }));
+    loc.area.blur();
+  }
   else await pickComboOption(doc, loc.input, v);
   return readValue(loc) === v;
 }

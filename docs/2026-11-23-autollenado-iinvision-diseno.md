@@ -132,6 +132,7 @@ no se toca (no está en la lista del auditor).
 | Anti Theft Activated (lista, se guarda con Save) | "Autopilot status" activo (enabled/active/enrolled, sin not/unknown/disabled) → **Microsoft Intune**, solo si el auditor marca "Confirmar". Cualquier otro valor o sin dato → **None** *(decidido por el auditor, 2026-11-23)* | — |
 | HDMI Ports (atributo, lista) | "Ports: … HDMI: N" en Hardware Details → N | Sin dato → **1 por defecto**, con aviso en el panel *(decidido por el auditor)* |
 | SD Card Slots (atributo, lista) | Algún dispositivo con "card reader" → 1 | Sin dato → **1 por defecto**, con aviso en el panel *(decidido por el auditor)* |
+| Notas (texto) | Si "Hardware check → Battery capacity" es **Failed** (salud < 60%): agregar al final "; Estado de Bateria : N%" con el primer porcentaje del check *(decidido por el auditor)*. Nunca reemplaza el texto existente | Ya tiene esa línea → nada; ya tiene otra "Estado de Bateria" → no tocar, avisar |
 | Fingerprint Scanner (atributo) | Algún dispositivo contiene "Fingerprint" → Yes; si no → No | — |
 | WWAN (atributo) | Algún dispositivo indica módem móvil / WWAN / LTE → Yes; si no → No | — |
 | Screen Resolution (atributo) | "Native Resolution: AxB" del Display 1 → elegir "AxB" en el combo | Si "AxB" no existe en la lista → no tocar, avisar |

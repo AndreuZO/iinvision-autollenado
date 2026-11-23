@@ -92,7 +92,8 @@
           status.replaceChildren(label);
           confirmById[c.target.id] = box;
         }
-        tr.append(el('td', c.target.label), el('td', show(c.current) + ' → ' + show(c.proposed) + (c.defaulted ? ' (por defecto)' : '')), status);
+        const change = c.addition ? '+ ' + c.addition : show(c.current) + ' → ' + show(c.proposed) + (c.defaulted ? ' (por defecto)' : '');
+        tr.append(el('td', c.target.label), el('td', change), status);
         table.append(tr);
         if (c.action === 'apply') { shown.push(c); statusById[c.target.id] = status; }
       }

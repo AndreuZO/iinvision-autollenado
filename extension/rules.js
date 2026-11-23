@@ -39,7 +39,15 @@ function proposeValues(pairs, notes) {
     failedChecks: pairs
       .filter(p => p.section === 'Hardware check' && /^Failed/.test(p.value))
       .map(p => p.label),
+    batteryNote: batteryNote(pairs),
   };
+}
+
+// Blancco marca "Battery capacity: Failed, 58% ..." cuando la salud es < 60%: va a Notas.
+function batteryNote(pairs) {
+  const check = pairs.find(p => p.section === 'Hardware check' && p.label === 'Battery capacity');
+  const pct = check && /^Failed/.test(check.value) && /(\d+)\s*%/.exec(check.value);
+  return pct ? 'Estado de Bateria : ' + pct[1] + '%' : null;
 }
 
 // Campos físicos de la ficha. Prefijos: (ninguno) radio por id, chk: checkbox por etiqueta,
@@ -63,6 +71,7 @@ const TARGETS = [
   { key: 'hdmiPorts', id: 'combo:HDMI Ports', label: 'HDMI Ports' },
   { key: 'sdCardSlots', id: 'combo:SD Card Slots', label: 'SD Card Slots' },
   { key: 'antiTheft', id: 'field:item.anti', label: 'Anti Theft Activated' }, // field: combo por kendo-label title
+  { key: 'batteryNote', id: 'notes', label: 'Notas' }, // se agrega una línea, nunca se reemplaza
 ];
 
 // Si el reporte no trae el dato, se propone este valor y el panel lo avisa (pedido del auditor).
@@ -82,7 +91,8 @@ function planChanges(proposal, current, itemSerial, productType) {
   if (!proposal.serial || norm(proposal.serial) !== norm(itemSerial)) {
     return { blocked: 'El reporte abierto no es de este equipo', changes: [] };
   }
-  const changes = TARGETS.filter(t => t.id in current).map(t => {
+  const changes = TARGETS.filter(t => t.id in current && !(t.key === 'batteryNote' && !proposal.batteryNote)).map(t => {
+    if (t.key === 'batteryNote') return noteChange(t, current[t.id], proposal.batteryNote);
     const defaulted = proposal.fields[t.key] === null && t.key in DEFAULTS;
     const proposed = defaulted ? DEFAULTS[t.key] : proposal.fields[t.key];
     return {
@@ -93,6 +103,13 @@ function planChanges(proposal, current, itemSerial, productType) {
     };
   });
   return { blocked: null, changes };
+}
+
+// Agrega la línea al final de las notas; si ya hay una nota de batería distinta, no se toca.
+function noteChange(target, notes, line) {
+  const action = notes.includes(line) ? 'same' : /estado de bateria/i.test(notes) ? 'conflict' : 'apply';
+  const proposed = action === 'apply' ? (notes.trim() ? notes.trim() + '; ' + line : line) : notes;
+  return { target, current: notes, proposed, action, addition: line, defaulted: false, instant: false, confirm: false };
 }
 
 // Al pulsar Aplicar: de lo que se mostró, solo lo que en un plan recién leído sigue

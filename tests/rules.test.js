@@ -68,12 +68,13 @@ const empty = () => ({
   'combo:Screen Resolution': '',
   'attr:Webcam': 'unspecified', 'attr:Touchscreen': 'unspecified', 'attr:Bluetooth': 'unspecified',
   'combo:HDMI Ports': '', 'combo:SD Card Slots': '', 'field:item.anti': '',
+  notes: '',
 });
 const plan = (current, serial = 'TESTSERIAL1', type = 'PC - Notebook', p = prop) =>
   planChanges(p, current, serial, type);
 const find = (r, id) => r.changes.find(c => c.target.id === id);
 
-test('TARGETS cubre los 17 campos', () => {
+test('TARGETS cubre los 18 campos', () => {
   assert.deepEqual(TARGETS.map(t => t.id).sort(), Object.keys(empty()).sort());
 });
 
@@ -225,4 +226,31 @@ test('atributos (attr:, combo:) son instantáneos; el resto no', () => {
   assert.equal(find(r, 'combo:HDMI Ports').instant, true);
   assert.equal(find(r, 'current_HasWireless').instant, false);
   assert.equal(find(r, 'field:item.anti').instant, false);
+});
+
+// ---- Nota de batería cuando falla "Battery capacity" (< 60%) ----
+const dell = () => proposeValues(require('./fixtures/latitude-3420.json'), 'CON CARGADOR DELL');
+const planDell = notes => planChanges(dell(), { notes }, 'TESTSERIAL3', 'PC - Notebook');
+
+test('batería fallida -> nota "Estado de Bateria : 58%"', () => {
+  assert.equal(dell().batteryNote, 'Estado de Bateria : 58%');
+});
+
+test('batería sana -> sin nota', () => {
+  assert.equal(proposeValues(fixture, '').batteryNote, null);
+  assert.equal(find(plan(empty()), 'notes'), undefined);
+});
+
+test('nota se agrega al final con "; "', () => {
+  const c = planDell('SE COLOCA VOID; CON CARGADOR DELL').changes[0];
+  assert.deepEqual([c.action, c.proposed, c.instant], ['apply', 'SE COLOCA VOID; CON CARGADOR DELL; Estado de Bateria : 58%', false]);
+});
+
+test('notas vacías -> solo la línea de batería', () => {
+  assert.equal(planDell('').changes[0].proposed, 'Estado de Bateria : 58%');
+});
+
+test('nota ya presente -> same; otro porcentaje -> conflict', () => {
+  assert.equal(planDell('X; Estado de Bateria : 58%').changes[0].action, 'same');
+  assert.equal(planDell('X; estado de bateria : 70%').changes[0].action, 'conflict');
 });
