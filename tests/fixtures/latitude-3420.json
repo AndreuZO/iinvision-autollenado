@@ -10,6 +10,8 @@
   {"section":"Hardware Details","label":"Battery","value":"Vendor: SWD-ATL3.660, Model: DELL FH3K215, Capacity: 2131 / 3645 mAh"},
   {"section":"Hardware check","label":"Battery capacity","value":"Failed, 58% ( 59%)"},
   {"section":"Hardware check","label":"Motherboard","value":"Failed, Internal clock is off, check CMOS battery."},
+  {"section":"Hardware check","label":"Pointer","value":"Not performed"},
+  {"section":"Hardware check","label":"SIM card presence","value":"Not available, Component is missing or not detected."},
   {"section":"Hardware check","label":"Touchscreen","value":"Not available, Component is missing or not detected."},
   {"section":"Hardware check","label":"Webcam","value":"Successful"}
 ]

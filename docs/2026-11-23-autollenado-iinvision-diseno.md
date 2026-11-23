@@ -100,6 +100,13 @@ propuesto, el resumen lo muestra como aviso y **no se cambia**. En la práctica 
 campos Yes/No suelen venir ya cargados; lo que más varía por equipo son los
 **atributos** (Screen Resolution, Fingerprint Scanner, WWAN).
 
+**Alertas de Hardware check** *(decidido por el auditor, 2026-11-23)*: las pruebas de Blancco en
+**Failed** o **Not performed** se muestran en **rojo** arriba del panel con su razón
+(ej. "✖ Battery capacity: Falló — 58% (< 59%)", "✖ Motherboard: Falló — Internal clock is off,
+check CMOS battery.", "✖ Pointer: No se probó"). Successful se ignora; Not available también
+(el equipo no tiene ese componente) *(decisión del asistente)*. Los avisos de "valor por
+defecto" siguen en naranja.
+
 **Los atributos se guardan al instante** *(descubierto el 2026-11-23)*: en iinvision, cambiar un
 atributo (tabla Attributes) lo guarda sin pulsar Save, y puede actualizar campos relacionados
 (Has Webcam?, Has Touchscreen?). Por eso el panel tiene dos bloques: "Campos" (esperan a

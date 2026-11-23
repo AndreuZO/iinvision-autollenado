@@ -11,7 +11,7 @@ test('x1 yoga: valores propuestos', () => {
   assert.deepEqual(p.fields, { wifi: true, ethernet: false, battery: true, touchscreen: true,
     webcam: true, fingerprint: true, wwan: false, bluetooth: true, acAdapter: true, screenResolution: '1920x1200',
     hdmiPorts: null, sdCardSlots: null, antiTheft: 'None' });
-  assert.deepEqual(p.failedChecks, ['Webcam']);
+  assert.deepEqual(p.alerts, [{ name: 'Webcam', status: 'Falló', reason: '' }]);
 });
 
 test('sin pares de Hardware Details: todo en false, resolución null, serial null', () => {
@@ -20,7 +20,7 @@ test('sin pares de Hardware Details: todo en false, resolución null, serial nul
   assert.deepEqual(p.fields, { wifi: false, ethernet: false, battery: false, touchscreen: false,
     webcam: false, fingerprint: false, wwan: false, bluetooth: false, acAdapter: null, screenResolution: null,
     hdmiPorts: null, sdCardSlots: null, antiTheft: 'None' });
-  assert.deepEqual(p.failedChecks, []);
+  assert.deepEqual(p.alerts, []);
 });
 
 test('Ethernet interno cuenta', () => {
@@ -186,7 +186,11 @@ test('latitude 3420: cámara "Webcam" cuenta como webcam', () => {
   assert.deepEqual(p.fields, { wifi: true, ethernet: true, battery: true, touchscreen: false,
     webcam: true, fingerprint: false, wwan: false, bluetooth: true, acAdapter: true, screenResolution: '1920x1080',
     hdmiPorts: null, sdCardSlots: null, antiTheft: 'None' });
-  assert.deepEqual(p.failedChecks, ['Battery capacity', 'Motherboard']);
+  assert.deepEqual(p.alerts, [
+    { name: 'Battery capacity', status: 'Falló', reason: '58% ( 59%)' },
+    { name: 'Motherboard', status: 'Falló', reason: 'Internal clock is off, check CMOS battery.' },
+    { name: 'Pointer', status: 'No se probó', reason: '' },
+  ]); // Successful y Not available (componente que no existe) se ignoran
 });
 
 // ---- HDMI, SD, Anti Theft, valores por defecto y atributos instantáneos ----
@@ -253,4 +257,14 @@ test('notas vacías -> solo la línea de batería', () => {
 test('nota ya presente -> same; otro porcentaje -> conflict', () => {
   assert.equal(planDell('X; Estado de Bateria : 58%').changes[0].action, 'same');
   assert.equal(planDell('X; estado de bateria : 70%').changes[0].action, 'conflict');
+});
+
+test('alertas: formato real de la página, sin coma después de Failed', () => {
+  const chk = (label, value) => ({ section: 'Hardware check', label, value });
+  assert.deepEqual(proposeValues([chk('Battery capacity', 'Failed 58% ( 59%)'),
+    chk('Motherboard', 'Failed Internal clock is off, check CMOS battery.'),
+    chk('Touchscreen', 'Not available Component is missing or not detected.')], '').alerts, [
+    { name: 'Battery capacity', status: 'Falló', reason: '58% ( 59%)' },
+    { name: 'Motherboard', status: 'Falló', reason: 'Internal clock is off, check CMOS battery.' },
+  ]);
 });

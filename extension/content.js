@@ -55,10 +55,10 @@
   // Lee todo de nuevo (sin caché): la página puede haber cambiado.
   function computePlan() {
     const report = document.getElementById('reportBody');
-    if (!report) return { blocked: 'Abre primero el reporte Blancco', changes: [], failedChecks: [] };
+    if (!report) return { blocked: 'Abre primero el reporte Blancco', changes: [], alerts: [] };
     const state = readItemState(document);
     const proposal = proposeValues(readReportPairs(report), state.notes);
-    return { ...planChanges(proposal, state.current, state.serial, state.productType), failedChecks: proposal.failedChecks };
+    return { ...planChanges(proposal, state.current, state.serial, state.productType), alerts: proposal.alerts };
   }
 
   function run() {
@@ -100,7 +100,10 @@
     }
 
     const parts = [];
-    if (plan.failedChecks.length) parts.push(el('p', '⚠ Hardware check falló: ' + plan.failedChecks.join(', '), 'aa-warn'));
+    // Pruebas de Blancco que fallaron o no se hicieron: en rojo, con su razón.
+    for (const a of plan.alerts) {
+      parts.push(el('p', '✖ ' + a.name + ': ' + a.status + (a.reason ? ' — ' + a.reason : ''), 'aa-error'));
+    }
     const defaulted = shown.filter(c => c.defaulted);
     if (defaulted.length) {
       parts.push(el('p', '⚠ No se encontraron en el reporte: ' + defaulted.map(c => c.target.label).join(', ') + '. Se pondrá 1 por defecto.', 'aa-warn'));

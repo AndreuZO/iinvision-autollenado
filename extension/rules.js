@@ -36,11 +36,19 @@ function proposeValues(pairs, notes) {
       sdCardSlots: anyValue(/card reader/i) ? '1' : null,
       antiTheft: autopilotActive ? 'Microsoft Intune' : 'None',
     },
-    failedChecks: pairs
-      .filter(p => p.section === 'Hardware check' && /^Failed/.test(p.value))
-      .map(p => p.label),
+    alerts: hardwareAlerts(pairs),
     batteryNote: batteryNote(pairs),
   };
+}
+
+// Pruebas de "Hardware check" que el auditor debe ver en rojo: Failed y Not performed, con su razón.
+// Successful se ignora, y Not available también (el equipo no tiene ese componente).
+const ALERT_STATUS = { 'failed': 'Falló', 'not performed': 'No se probó' };
+function hardwareAlerts(pairs) {
+  return pairs.filter(p => p.section === 'Hardware check').flatMap(p => {
+    const m = /^(Failed|Not performed)\b[,\s]*(.*)$/i.exec(p.value); // en la página no siempre hay coma
+    return m ? [{ name: p.label, status: ALERT_STATUS[m[1].toLowerCase()], reason: m[2] || '' }] : [];
+  });
 }
 
 // Blancco marca "Battery capacity: Failed, 58% ..." cuando la salud es < 60%: va a Notas.

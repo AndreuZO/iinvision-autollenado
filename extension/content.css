@@ -22,6 +22,7 @@
 .aa-group td { padding-top: 6px; font-weight: 700; color: #555; border-bottom: 1px solid #ccc; }
 .aa-apply td:last-child { color: #1a7f37; font-weight: 600; }
 .aa-conflict td:last-child, .aa-warn { color: #b35900; font-weight: 600; }
+.aa-error { color: #c62828; font-weight: 700; }
 .aa-undetermined td:last-child, .aa-muted { color: #777; }
 .aa-actions { margin-top: 8px; display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
 .aa-actions button { padding: 4px 12px; cursor: pointer; }
