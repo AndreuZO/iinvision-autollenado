@@ -1,0 +1,19 @@
+[
+  {"section":"Erasure Results","label":"Serial","value":"DISKSERIAL1"},
+  {"section":"Hardware Details","label":"Manufacturer","value":"LENOVO"},
+  {"section":"Hardware Details","label":"Chassis Type","value":"Convertible"},
+  {"section":"Hardware Details","label":"Serial","value":"TESTSERIAL1"},
+  {"section":"Hardware Details","label":"Total Memory","value":"32GB, Occupied memory banks: 8/8"},
+  {"section":"Hardware Details","label":"Display","value":"AU Optronics, AUO B140UAN02.1, Native Resolution: 1920x1200, Refresh Rate: 60Hz, Size: 14.0\", Year: 2020"},
+  {"section":"Hardware Details","label":"Touchscreen","value":"Unknown Vendor, Unknown model"},
+  {"section":"Hardware Details","label":"Wi-Fi adapter","value":"Wireless, Intel Corporation Wi-Fi 6 AX201"},
+  {"section":"Hardware Details","label":"Bluetooth adapter","value":"Intel Corp., AX201 Bluetooth"},
+  {"section":"Hardware Details","label":"USB device","value":"Luxvisions Innotech Limited, Unknown model (0x0026), Integrated Camera 2.01"},
+  {"section":"Hardware Details","label":"USB device","value":"Synaptics, Inc., Prometheus Fingerprint Reader 2.00"},
+  {"section":"Hardware Details","label":"USB device","value":"Kingston Technology, DataTraveler 100 G3/G4/SE9 G2/50 Kyson"},
+  {"section":"Hardware Details","label":"USB device","value":"Symbol Technologies, Bar Code Scanner"},
+  {"section":"Hardware Details","label":"Battery","value":"Vendor: Sunwoda, Capacity: 56990 / 57000 mWh"},
+  {"section":"Hardware check","label":"Battery capacity","value":"Successful, 99%"},
+  {"section":"Hardware check","label":"Touchscreen","value":"Successful"},
+  {"section":"Hardware check","label":"Webcam","value":"Failed"}
+]
