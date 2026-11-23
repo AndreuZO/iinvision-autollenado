@@ -100,6 +100,13 @@ propuesto, el resumen lo muestra como aviso y **no se cambia**. En la práctica 
 campos Yes/No suelen venir ya cargados; lo que más varía por equipo son los
 **atributos** (Screen Resolution, Fingerprint Scanner, WWAN).
 
+**Los atributos se guardan al instante** *(descubierto el 2026-11-23)*: en iinvision, cambiar un
+atributo (tabla Attributes) lo guarda sin pulsar Save, y puede actualizar campos relacionados
+(Has Webcam?, Has Touchscreen?). Por eso el panel tiene dos bloques: "Campos" (esperan a
+Save) y "Atributos (⚠ iinvision los guarda al instante)", cada uno con su propio botón.
+HDMI Ports y SD Card Slots son de tipo "Model": probablemente se guardan para todo el modelo
+(sin verificar). La extensión nunca prueba "Aplicar atributos" sola en producción.
+
 **Laptops y todo en uno** *(decidido por el auditor; todo en uno agregado el 2026-11-23)*:
 si el "Product Type" de la ficha no es Notebook ni All-In-One, el botón avisa "Por ahora
 solo laptops y todo en uno" y no hace nada. Desktops y otros equipos, en una versión
@@ -122,7 +129,9 @@ no se toca (no está en la lista del auditor).
 | Has Touchscreen? | Existe etiqueta "Touchscreen:" en Hardware Details → Yes; si no → No | — |
 | Has Webcam? | Algún "USB device" contiene "Camera" → Yes; si no → No | — |
 | Has AC Adapter? | Notas contienen "CON CARGADOR" → marcado; "SIN CARGADOR" → desmarcado (sin distinguir mayúsculas) | Ninguna o ambas → no tocar, avisar |
-| Anti Theft Activated | Reporte indica Computrace o Autopilot **activado** → marcado. Nunca se desmarca automáticamente *(decisión del asistente)* | Texto exacto pendiente (§9). Mientras tanto → no tocar |
+| Anti Theft Activated (lista, se guarda con Save) | "Autopilot status" activo (enabled/active/enrolled, sin not/unknown/disabled) → **Microsoft Intune**, solo si el auditor marca "Confirmar". Cualquier otro valor o sin dato → **None** *(decidido por el auditor, 2026-11-23)* | — |
+| HDMI Ports (atributo, lista) | "Ports: … HDMI: N" en Hardware Details → N | Sin dato → **1 por defecto**, con aviso en el panel *(decidido por el auditor)* |
+| SD Card Slots (atributo, lista) | Algún dispositivo con "card reader" → 1 | Sin dato → **1 por defecto**, con aviso en el panel *(decidido por el auditor)* |
 | Fingerprint Scanner (atributo) | Algún dispositivo contiene "Fingerprint" → Yes; si no → No | — |
 | WWAN (atributo) | Algún dispositivo indica módem móvil / WWAN / LTE → Yes; si no → No | — |
 | Screen Resolution (atributo) | "Native Resolution: AxB" del Display 1 → elegir "AxB" en el combo | Si "AxB" no existe en la lista → no tocar, avisar |

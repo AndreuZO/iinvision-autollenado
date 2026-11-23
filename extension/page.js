@@ -37,6 +37,10 @@ function locate(doc, id) {
     const box = label?.closest('.form-group')?.querySelector('input[type=checkbox]');
     return box && { kind: 'chk', box };
   }
+  if (kind === 'field') {
+    const input = formElement(doc, name)?.querySelector('kendo-multicolumncombobox input');
+    return input && { kind: 'combo', input };
+  }
   const row = tableRow(doc, name);
   if (!row) return null;
   if (kind === 'attr') {

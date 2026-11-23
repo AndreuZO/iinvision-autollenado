@@ -9,7 +9,8 @@ test('x1 yoga: valores propuestos', () => {
   const p = proposeValues(fixture, 'Case - Minor Dents; CON CARGADOR LENOVO TIPO C 65W');
   assert.equal(p.serial, 'TESTSERIAL1'); // el de Hardware Details, no el del disco
   assert.deepEqual(p.fields, { wifi: true, ethernet: false, battery: true, touchscreen: true,
-    webcam: true, fingerprint: true, wwan: false, bluetooth: true, acAdapter: true, screenResolution: '1920x1200' });
+    webcam: true, fingerprint: true, wwan: false, bluetooth: true, acAdapter: true, screenResolution: '1920x1200',
+    hdmiPorts: null, sdCardSlots: null, antiTheft: 'None' });
   assert.deepEqual(p.failedChecks, ['Webcam']);
 });
 
@@ -17,7 +18,8 @@ test('sin pares de Hardware Details: todo en false, resolución null, serial nul
   const p = proposeValues([{ section: 'Erasure Results', label: 'Serial', value: 'X' }], '');
   assert.equal(p.serial, null);
   assert.deepEqual(p.fields, { wifi: false, ethernet: false, battery: false, touchscreen: false,
-    webcam: false, fingerprint: false, wwan: false, bluetooth: false, acAdapter: null, screenResolution: null });
+    webcam: false, fingerprint: false, wwan: false, bluetooth: false, acAdapter: null, screenResolution: null,
+    hdmiPorts: null, sdCardSlots: null, antiTheft: 'None' });
   assert.deepEqual(p.failedChecks, []);
 });
 
@@ -65,12 +67,13 @@ const empty = () => ({
   'attr:Fingerprint Scanner': 'unspecified', 'attr:WWAN': 'unspecified',
   'combo:Screen Resolution': '',
   'attr:Webcam': 'unspecified', 'attr:Touchscreen': 'unspecified', 'attr:Bluetooth': 'unspecified',
+  'combo:HDMI Ports': '', 'combo:SD Card Slots': '', 'field:item.anti': '',
 });
 const plan = (current, serial = 'TESTSERIAL1', type = 'PC - Notebook', p = prop) =>
   planChanges(p, current, serial, type);
 const find = (r, id) => r.changes.find(c => c.target.id === id);
 
-test('TARGETS cubre los 14 campos', () => {
+test('TARGETS cubre los 17 campos', () => {
   assert.deepEqual(TARGETS.map(t => t.id).sort(), Object.keys(empty()).sort());
 });
 
@@ -155,7 +158,8 @@ test('stillToApply: solo lo que se mostró en el resumen', () => {
 test('m70a: Network Adapter interno -> ethernet true; sin batería ni touchscreen', () => {
   const p = proposeValues(require('./fixtures/m70a-aio.json'), '');
   assert.deepEqual(p.fields, { wifi: true, ethernet: true, battery: false, touchscreen: false,
-    webcam: true, fingerprint: false, wwan: false, bluetooth: true, acAdapter: null, screenResolution: '1920x1080' });
+    webcam: true, fingerprint: false, wwan: false, bluetooth: true, acAdapter: null, screenResolution: '1920x1080',
+    hdmiPorts: '1', sdCardSlots: null, antiTheft: 'None' });
 });
 
 test('m70a: todo en uno se acepta y llena Current y sus atributos', () => {
@@ -179,6 +183,46 @@ test('m70a: todo en uno se acepta y llena Current y sus atributos', () => {
 test('latitude 3420: cámara "Webcam" cuenta como webcam', () => {
   const p = proposeValues(require('./fixtures/latitude-3420.json'), 'CON CARGADOR DELL');
   assert.deepEqual(p.fields, { wifi: true, ethernet: true, battery: true, touchscreen: false,
-    webcam: true, fingerprint: false, wwan: false, bluetooth: true, acAdapter: true, screenResolution: '1920x1080' });
+    webcam: true, fingerprint: false, wwan: false, bluetooth: true, acAdapter: true, screenResolution: '1920x1080',
+    hdmiPorts: null, sdCardSlots: null, antiTheft: 'None' });
   assert.deepEqual(p.failedChecks, ['Battery capacity', 'Motherboard']);
+});
+
+// ---- HDMI, SD, Anti Theft, valores por defecto y atributos instantáneos ----
+test('Anti Theft: Autopilot activo -> Microsoft Intune; no activo o desconocido -> None', () => {
+  for (const v of ['Enrolled', 'Enabled', 'Active']) assert.equal(proposeValues([hw('Autopilot status', v)], '').fields.antiTheft, 'Microsoft Intune', v);
+  for (const v of ['Not enrolled', 'Unknown', 'Disabled', 'algo raro']) assert.equal(proposeValues([hw('Autopilot status', v)], '').fields.antiTheft, 'None', v);
+});
+
+test('SD Card Slots: lector de tarjetas en el reporte -> 1', () => {
+  assert.equal(proposeValues([hw('USB device', 'Realtek USB 3.0 Card Reader')], '').fields.sdCardSlots, '1');
+});
+
+test('HDMI y SD sin dato en el reporte -> 1 por defecto, marcado como defaulted', () => {
+  const r = plan(empty());
+  assert.deepEqual([find(r, 'combo:HDMI Ports'), find(r, 'combo:SD Card Slots')].map(c => [c.action, c.proposed, c.defaulted]),
+    [['apply', '1', true], ['apply', '1', true]]);
+});
+
+test('HDMI del reporte no es defaulted', () => {
+  const r = planChanges(proposeValues(require('./fixtures/m70a-aio.json'), ''), { 'combo:HDMI Ports': '' }, 'TESTSERIAL2', 'PC - All-In-One');
+  assert.deepEqual([r.changes[0].proposed, r.changes[0].defaulted], ['1', false]);
+});
+
+test('HDMI ya lleno con otro valor -> conflict, no se toca', () => {
+  assert.equal(find(plan({ ...empty(), 'combo:HDMI Ports': '2' }), 'combo:HDMI Ports').action, 'conflict');
+});
+
+test('Anti Theft Microsoft Intune pide confirmación; None no', () => {
+  assert.equal(find(plan(empty()), 'field:item.anti').confirm, false);
+  const p = { ...prop, fields: { ...prop.fields, antiTheft: 'Microsoft Intune' } };
+  assert.equal(find(plan(empty(), 'TESTSERIAL1', 'PC - Notebook', p), 'field:item.anti').confirm, true);
+});
+
+test('atributos (attr:, combo:) son instantáneos; el resto no', () => {
+  const r = plan(empty());
+  assert.equal(find(r, 'attr:WWAN').instant, true);
+  assert.equal(find(r, 'combo:HDMI Ports').instant, true);
+  assert.equal(find(r, 'current_HasWireless').instant, false);
+  assert.equal(find(r, 'field:item.anti').instant, false);
 });

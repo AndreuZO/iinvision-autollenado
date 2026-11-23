@@ -15,6 +15,10 @@ function proposeValues(pairs, notes) {
   const serial = hw.find(p => p.label === 'Serial');
   const display = hw.find(p => p.label === 'Display');
   const res = display && /Native Resolution:\s*(\d+x\d+)/.exec(display.value);
+  const hdmi = /HDMI:\s*(\d+)/i.exec(hw.find(p => p.label === 'Ports')?.value || '');
+  const autopilot = hw.find(p => p.label === 'Autopilot status')?.value || '';
+  // Solo un estado claramente activo cuenta; lo no reconocido queda en None (pedido del auditor).
+  const autopilotActive = /\b(enabled|active|enrolled)\b/i.test(autopilot) && !/\b(not|unknown|disabled|inactive)\b/i.test(autopilot);
   return {
     serial: serial ? serial.value : null,
     fields: {
@@ -28,6 +32,9 @@ function proposeValues(pairs, notes) {
       bluetooth: hw.some(p => p.label.startsWith('Bluetooth adapter')),
       acAdapter: acAdapterFromNotes(notes),
       screenResolution: res ? res[1] : null,
+      hdmiPorts: hdmi ? hdmi[1] : null,
+      sdCardSlots: anyValue(/card reader/i) ? '1' : null,
+      antiTheft: autopilotActive ? 'Microsoft Intune' : 'None',
     },
     failedChecks: pairs
       .filter(p => p.section === 'Hardware check' && /^Failed/.test(p.value))
@@ -53,7 +60,13 @@ const TARGETS = [
   { key: 'webcam', id: 'attr:Webcam', label: 'Webcam (atributo)' },
   { key: 'touchscreen', id: 'attr:Touchscreen', label: 'Touchscreen (atributo)' },
   { key: 'bluetooth', id: 'attr:Bluetooth', label: 'Bluetooth (atributo)' },
+  { key: 'hdmiPorts', id: 'combo:HDMI Ports', label: 'HDMI Ports' },
+  { key: 'sdCardSlots', id: 'combo:SD Card Slots', label: 'SD Card Slots' },
+  { key: 'antiTheft', id: 'field:item.anti', label: 'Anti Theft Activated' }, // field: combo por kendo-label title
 ];
+
+// Si el reporte no trae el dato, se propone este valor y el panel lo avisa (pedido del auditor).
+const DEFAULTS = { hdmiPorts: '1', sdCardSlots: '1' };
 
 function actionFor(target, current, proposed) {
   if (proposed === null) return 'undetermined';
@@ -70,8 +83,14 @@ function planChanges(proposal, current, itemSerial, productType) {
     return { blocked: 'El reporte abierto no es de este equipo', changes: [] };
   }
   const changes = TARGETS.filter(t => t.id in current).map(t => {
-    const proposed = proposal.fields[t.key];
-    return { target: t, current: current[t.id], proposed, action: actionFor(t, current[t.id], proposed) };
+    const defaulted = proposal.fields[t.key] === null && t.key in DEFAULTS;
+    const proposed = defaulted ? DEFAULTS[t.key] : proposal.fields[t.key];
+    return {
+      target: t, current: current[t.id], proposed, action: actionFor(t, current[t.id], proposed),
+      defaulted,
+      instant: /^(attr|combo):/.test(t.id), // iinvision guarda los atributos al instante, sin Save
+      confirm: t.key === 'antiTheft' && proposed !== 'None',
+    };
   });
   return { blocked: null, changes };
 }

@@ -17,5 +17,7 @@
 .aa-apply td:last-child { color: #1a7f37; font-weight: 600; }
 .aa-conflict td:last-child, .aa-warn { color: #b35900; font-weight: 600; }
 .aa-undetermined td:last-child, .aa-same td:last-child { color: #777; }
+.aa-block { margin-top: 10px; padding-top: 6px; border-top: 1px solid #ddd; }
+.aa-block h4 { margin: 0 0 6px; font-size: 13px; }
 .aa-actions { margin-top: 10px; display: flex; gap: 8px; justify-content: flex-end; }
 .aa-actions button { padding: 6px 12px; cursor: pointer; }
