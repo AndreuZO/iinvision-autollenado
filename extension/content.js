@@ -39,7 +39,9 @@
   function openPanel(...children) {
     closePanel();
     panel = el('div', null, 'aa-panel');
-    panel.append(el('h3', 'Autollenado desde Blancco'), ...children);
+    const body = el('div', null, 'aa-body');
+    body.append(...children);
+    panel.append(el('h3', 'Autollenado desde Blancco'), body);
     const close = el('button', 'Cancelar');
     close.type = 'button';
     close.addEventListener('click', closePanel);
@@ -64,55 +66,59 @@
     const plan = computePlan();
     if (plan.blocked) return openPanel(el('p', plan.blocked));
 
-    const parts = [];
-    if (plan.failedChecks.length) {
-      parts.push(el('p', '⚠ Hardware check falló: ' + plan.failedChecks.join(', '), 'aa-warn'));
-    }
-    parts.push(block('Campos (se guardan al pulsar Save)', plan.changes.filter(c => !c.instant),
-      'Aplicar campos', 'Revisa y pulsa Save tú mismo.', []));
-    const defaulted = plan.changes.filter(c => c.instant && c.defaulted && c.action === 'apply');
-    parts.push(block('Atributos (⚠ iinvision los guarda al instante)', plan.changes.filter(c => c.instant),
-      'Aplicar atributos (se guardan ya)', 'Atributos guardados en iinvision.',
-      defaulted.length ? [el('p', '⚠ No se encontraron en el reporte: ' + defaulted.map(c => c.target.label).join(', ') +
-        '. Se pondrá 1 por defecto.', 'aa-warn')] : []));
-    openPanel(...parts);
-  }
-
-  // Un bloque del panel: tabla de cambios + su propio botón de aplicar.
-  function block(title, changes, buttonText, doneText, notes) {
-    const wrap = el('div', null, 'aa-block');
-    wrap.append(el('h4', title));
-    if (!changes.length) { wrap.append(el('p', 'Nada en esta ficha.')); return wrap; }
+    // Solo se listan los cambios; lo que ya está bien se resume en una línea (panel compacto).
+    const listed = plan.changes.filter(c => c.action !== 'same');
+    const sameCount = plan.changes.length - listed.length;
     const table = el('table');
     const shown = [];
     const statusById = {};
     const confirmById = {};
-    for (const c of changes) {
-      const tr = el('tr', null, 'aa-' + c.action);
-      const status = el('td', STATUS[c.action]);
-      if (c.action === 'apply' && c.confirm) {
-        const box = el('input');
-        box.type = 'checkbox';
-        const label = el('label');
-        label.append(box, ' Confirmar');
-        status.replaceChildren(label);
-        confirmById[c.target.id] = box;
+    for (const [title, group] of [['Campos (se guardan con Save)', listed.filter(c => !c.instant)],
+                                  ['Atributos (se guardan al instante)', listed.filter(c => c.instant)]]) {
+      if (!group.length) continue;
+      const head = el('tr', null, 'aa-group');
+      const th = el('td', title);
+      th.colSpan = 3;
+      head.append(th);
+      table.append(head);
+      for (const c of group) {
+        const tr = el('tr', null, 'aa-' + c.action);
+        const status = el('td', STATUS[c.action]);
+        if (c.action === 'apply' && c.confirm) {
+          const box = el('input');
+          box.type = 'checkbox';
+          const label = el('label');
+          label.append(box, ' Confirmar');
+          status.replaceChildren(label);
+          confirmById[c.target.id] = box;
+        }
+        tr.append(el('td', c.target.label), el('td', show(c.current) + ' → ' + show(c.proposed) + (c.defaulted ? ' (por defecto)' : '')), status);
+        table.append(tr);
+        if (c.action === 'apply') { shown.push(c); statusById[c.target.id] = status; }
       }
-      tr.append(el('td', c.target.label), el('td', show(c.current) + ' → ' + show(c.proposed) + (c.defaulted ? ' (por defecto)' : '')), status);
-      table.append(tr);
-      if (c.action === 'apply') { shown.push(c); statusById[c.target.id] = status; }
     }
-    const apply = el('button', buttonText);
+
+    const parts = [];
+    if (plan.failedChecks.length) parts.push(el('p', '⚠ Hardware check falló: ' + plan.failedChecks.join(', '), 'aa-warn'));
+    const defaulted = shown.filter(c => c.defaulted);
+    if (defaulted.length) {
+      parts.push(el('p', '⚠ No se encontraron en el reporte: ' + defaulted.map(c => c.target.label).join(', ') + '. Se pondrá 1 por defecto.', 'aa-warn'));
+    }
+    if (shown.some(c => c.instant)) parts.push(el('p', '⚠ Los atributos se guardan en iinvision al pulsar Aplicar.', 'aa-warn'));
+    parts.push(table);
+    if (sameCount) parts.push(el('p', '✔ ' + sameCount + ' campos ya estaban bien.', 'aa-muted'));
+    if (!shown.length) parts.push(el('p', 'Nada que aplicar.', 'aa-muted'));
+
+    const actions = openPanel(...parts);
+    const apply = el('button', 'Aplicar');
     apply.type = 'button';
     apply.disabled = shown.length === 0;
-    const row = el('div', null, 'aa-actions');
-    row.append(apply);
-    wrap.append(table, ...notes, row);
+    actions.prepend(apply);
     apply.addEventListener('click', async () => {
       if (busy) return;
       apply.disabled = true;
       const fresh = computePlan();
-      if (fresh.blocked) { row.prepend(el('span', fresh.blocked, 'aa-warn')); return; }
+      if (fresh.blocked) { actions.prepend(el('span', fresh.blocked, 'aa-warn')); return; }
       const confirmed = shown.filter(c => !confirmById[c.target.id] || confirmById[c.target.id].checked);
       const todo = stillToApply(confirmed, fresh);
       busy = btn.disabled = true;
@@ -128,8 +134,7 @@
       } finally {
         busy = btn.disabled = false;
       }
-      row.prepend(el('span', doneText));
+      actions.prepend(el('span', 'Listo. Revisa y pulsa Save.', 'aa-muted'));
     });
-    return wrap;
   }
 })();
