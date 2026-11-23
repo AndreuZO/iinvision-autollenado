@@ -48,7 +48,7 @@ function locate(doc, id) {
 }
 
 function readValue(loc) {
-  if (loc.kind === 'radio') return loc.yes.checked ? true : loc.no.checked ? false : 'unspecified';
+  if (loc.kind === 'radio') return loc.yes.checked ? true : loc.no?.checked ? false : 'unspecified';
   if (loc.kind === 'chk') return loc.box.checked;
   return loc.input.value.trim();
 }

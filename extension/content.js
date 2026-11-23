@@ -15,11 +15,18 @@
   btn.textContent = 'Autollenar';
   btn.addEventListener('click', run);
   document.body.appendChild(btn);
-  // iinvision es una SPA: el botón se muestra solo en fichas de equipo.
-  setInterval(() => { btn.hidden = !onItemPage(); }, 1000);
-  btn.hidden = !onItemPage();
 
   let panel = null;
+  let busy = false;
+  let lastPath = location.pathname;
+  // iinvision es una SPA: el botón se muestra solo en fichas de equipo y el panel
+  // se cierra al cambiar de página para no aplicar datos de otro equipo.
+  setInterval(() => {
+    btn.hidden = !onItemPage();
+    if (location.pathname !== lastPath) { lastPath = location.pathname; closePanel(); }
+  }, 1000);
+  btn.hidden = !onItemPage();
+
   function closePanel() { panel?.remove(); panel = null; }
 
   function el(tag, text, cls) {
@@ -33,7 +40,7 @@
     closePanel();
     panel = el('div', null, 'aa-panel');
     panel.append(el('h3', 'Autollenado desde Blancco'), ...children);
-    const close = el('button', 'Cerrar');
+    const close = el('button', 'Cancelar');
     close.type = 'button';
     close.addEventListener('click', closePanel);
     const actions = el('div', null, 'aa-actions');
@@ -43,37 +50,54 @@
     return actions;
   }
 
-  function run() {
-    // Se lee todo de nuevo en cada clic: la página puede haber cambiado de equipo.
+  // Lee todo de nuevo (sin caché): la página puede haber cambiado.
+  function computePlan() {
     const report = document.getElementById('reportBody');
-    if (!report) return openPanel(el('p', 'Abre primero el reporte Blancco'));
+    if (!report) return { blocked: 'Abre primero el reporte Blancco', changes: [], failedChecks: [] };
     const state = readItemState(document);
     const proposal = proposeValues(readReportPairs(report), state.notes);
-    const plan = planChanges(proposal, state.current, state.serial, state.productType);
+    return { ...planChanges(proposal, state.current, state.serial, state.productType), failedChecks: proposal.failedChecks };
+  }
+
+  function run() {
+    if (busy) return;
+    const plan = computePlan();
     if (plan.blocked) return openPanel(el('p', plan.blocked));
 
     const table = el('table');
-    const pending = [];
+    const shown = [];
+    const statusById = {};
     for (const c of plan.changes) {
       const tr = el('tr', null, 'aa-' + c.action);
       const status = el('td', STATUS[c.action]);
       tr.append(el('td', c.target.label), el('td', show(c.current) + ' → ' + show(c.proposed)), status);
       table.append(tr);
-      if (c.action === 'apply') pending.push({ change: c, status });
+      if (c.action === 'apply') { shown.push(c); statusById[c.target.id] = status; }
     }
     const parts = [table];
-    if (proposal.failedChecks.length) {
-      parts.push(el('p', '⚠ Hardware check falló: ' + proposal.failedChecks.join(', '), 'aa-warn'));
+    if (plan.failedChecks.length) {
+      parts.push(el('p', '⚠ Hardware check falló: ' + plan.failedChecks.join(', '), 'aa-warn'));
     }
     const actions = openPanel(...parts);
     const apply = el('button', 'Aplicar');
     apply.type = 'button';
-    apply.disabled = pending.length === 0;
+    apply.disabled = shown.length === 0;
     apply.addEventListener('click', async () => {
       apply.disabled = true;
-      for (const { change, status } of pending) {
-        const ok = await applyChange(document, change);
-        status.textContent = ok ? '✔ Aplicado' : '✘ No se pudo';
+      const fresh = computePlan();
+      if (fresh.blocked) { actions.prepend(el('span', fresh.blocked, 'aa-warn')); return; }
+      const todo = stillToApply(shown, fresh);
+      busy = btn.disabled = true;
+      try {
+        for (const id of Object.keys(statusById)) {
+          if (!todo.some(c => c.target.id === id)) statusById[id].textContent = '— Cambió, no se aplicó';
+        }
+        for (const change of todo) {
+          const ok = await applyChange(document, change);
+          statusById[change.target.id].textContent = ok ? '✔ Aplicado' : '✘ No se pudo';
+        }
+      } finally {
+        busy = btn.disabled = false;
       }
       actions.prepend(el('span', 'Revisa y pulsa Save tú mismo.'));
     });

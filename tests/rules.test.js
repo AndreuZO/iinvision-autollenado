@@ -128,3 +128,24 @@ test('idempotente', () => {
   for (const c of plan(cur).changes) if (c.action === 'apply') cur[c.target.id] = c.proposed;
   assert.equal(plan(cur).changes.filter(c => c.action === 'apply').length, 0);
 });
+
+// ---- Final review: re-validar al pulsar Aplicar ----
+const { stillToApply } = require('../extension/rules.js');
+
+test('stillToApply: campo cambiado a mano después del resumen no se aplica', () => {
+  const shown = plan(empty()).changes.filter(c => c.action === 'apply');
+  const fresh = plan({ ...empty(), current_HasWireless: false }); // auditor puso No a mano
+  const ids = stillToApply(shown, fresh).map(c => c.target.id);
+  assert.ok(!ids.includes('current_HasWireless'));
+  assert.ok(ids.includes('incoming_HasWireless'));
+});
+
+test('stillToApply: otro equipo (plan bloqueado) no aplica nada', () => {
+  const shown = plan(empty()).changes.filter(c => c.action === 'apply');
+  assert.deepEqual(stillToApply(shown, plan(empty(), 'OTRO')), []);
+});
+
+test('stillToApply: solo lo que se mostró en el resumen', () => {
+  const shown = plan(empty()).changes.filter(c => c.target.id === 'attr:WWAN');
+  assert.deepEqual(stillToApply(shown, plan(empty())).map(c => c.target.id), ['attr:WWAN']);
+});

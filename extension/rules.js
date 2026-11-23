@@ -71,4 +71,12 @@ function planChanges(proposal, current, itemSerial, productType) {
   return { blocked: null, changes };
 }
 
-if (typeof module !== 'undefined') module.exports = { proposeValues, acAdapterFromNotes, planChanges, TARGETS };
+// Al pulsar Aplicar: de lo que se mostró, solo lo que en un plan recién leído sigue
+// siendo 'apply' con el mismo valor (el auditor pudo editar o cambiar de equipo).
+function stillToApply(shown, freshPlan) {
+  if (freshPlan.blocked) return [];
+  return freshPlan.changes.filter(c => c.action === 'apply' &&
+    shown.some(s => s.target.id === c.target.id && s.proposed === c.proposed));
+}
+
+if (typeof module !== 'undefined') module.exports = { proposeValues, acAdapterFromNotes, planChanges, TARGETS, stillToApply };
