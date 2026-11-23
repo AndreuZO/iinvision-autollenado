@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Autollenado iinvision",
+  "version": "0.1.0",
+  "description": "Llena campos de la ficha de iinvision desde el reporte Blancco abierto. Todo local; nunca guarda.",
+  "content_scripts": [
+    {
+      "matches": ["https://iinvision.epcglobalsolutions.com/*"],
+      "js": ["rules.js", "page.js", "content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
