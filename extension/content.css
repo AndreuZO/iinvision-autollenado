@@ -1,30 +1,60 @@
+/* Panel de autollenado. Solo letra del sistema e íconos en línea: nada se descarga. */
 #aa-btn {
   position: fixed; right: 20px; bottom: 20px; z-index: 99999;
-  padding: 8px 14px; border: 0; border-radius: 6px;
-  background: #2b7bb9; color: #fff; font: 600 13px sans-serif; cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
+  padding: 9px 16px; border: 0; border-radius: 10px;
+  background: #1d4ed8; color: #fff; font: 600 13px "Segoe UI", system-ui, sans-serif; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(29, 78, 216, .4);
 }
 #aa-btn[hidden] { display: none; }
 .aa-panel {
-  position: fixed; right: 20px; bottom: 64px; z-index: 99999;
-  width: 380px; max-width: calc(100vw - 40px); max-height: 45vh;
-  display: flex; flex-direction: column;
-  padding: 10px 12px; border-radius: 8px; background: #fff; color: #222;
-  font: 12px/1.35 sans-serif; box-shadow: 0 4px 16px rgba(0, 0, 0, .5);
+  position: fixed; right: 20px; bottom: 68px; z-index: 99999;
+  width: 400px; max-width: calc(100vw - 40px); max-height: 60vh;
+  display: flex; flex-direction: column; box-sizing: border-box;
+  padding: 16px; border-radius: 16px; background: #f5f7fa; color: #111827;
+  font: 13px/1.4 "Segoe UI", system-ui, sans-serif; text-align: left;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, .35);
 }
+.aa-panel * { box-sizing: border-box; }
+.aa-head { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+.aa-logo { flex: none; width: 40px; height: 40px; border-radius: 11px; background: #1d4ed8; color: #fff;
+  display: grid; place-items: center; }
+.aa-logo svg { width: 20px; height: 20px; }
+.aa-panel h3 { margin: 0; font-size: 17px; font-weight: 700; color: #111827; }
+.aa-sub { margin: 0; color: #6b7280; font-size: 12px; }
 /* Lo de arriba hace scroll; los botones quedan siempre visibles abajo. */
-.aa-body { overflow: auto; min-height: 0; }
-.aa-panel h3 { margin: 0 0 6px; font-size: 13px; }
-.aa-panel p { margin: 4px 0; }
-.aa-panel table { border-collapse: collapse; width: 100%; }
-.aa-panel td { padding: 2px 4px; border-bottom: 1px solid #eee; }
-.aa-panel td:last-child { white-space: nowrap; }
-.aa-group td { padding-top: 6px; font-weight: 700; color: #555; border-bottom: 1px solid #ccc; }
-.aa-apply td:last-child { color: #1a7f37; font-weight: 600; }
-.aa-conflict td:last-child, .aa-warn { color: #b35900; font-weight: 600; }
-.aa-error { color: #c62828; font-weight: 700; }
-.aa-undetermined td:last-child, .aa-muted { color: #777; }
-.aa-actions { margin-top: 8px; display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
-.aa-actions button { padding: 4px 12px; cursor: pointer; }
-.aa-manual { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 2px 0 6px; }
-.aa-manual input { width: 48px; padding: 1px 4px; }
+.aa-body { overflow: auto; min-height: 0; padding-right: 2px; }
+.aa-section { margin: 10px 0 6px; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: #4b5563; }
+.aa-section-red { color: #b91c1c; }
+.aa-card { display: flex; gap: 10px; padding: 9px 12px; margin-bottom: 6px; border: 1px solid; border-radius: 10px; }
+.aa-card strong { display: block; font-size: 13px; color: #111827; }
+.aa-card-msg { display: block; }
+.aa-card-red { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+.aa-card-amber { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+.aa-icon { flex: none; width: 18px; height: 18px; margin-top: 1px; }
+.aa-icon svg { width: 18px; height: 18px; }
+.aa-inputs { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; color: #111827; }
+.aa-inputs input { width: 52px; margin-left: 4px; padding: 2px 6px; border: 1px solid #d1d5db; border-radius: 6px; font: inherit; }
+.aa-list { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; }
+.aa-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 12px; }
+.aa-row + .aa-row { border-top: 1px solid #f0f1f4; }
+.aa-name { min-width: 0; }
+.aa-name > span:first-child { display: block; }
+.aa-change { flex: none; display: flex; align-items: center; gap: 6px; }
+.aa-arrow { color: #9ca3af; }
+.aa-pill { padding: 1px 9px; border-radius: 999px; background: #f1f3f6; color: #4b5563; white-space: nowrap; }
+.aa-pill-new { background: #e7f7ee; color: #15803d; font-weight: 700; }
+.aa-pill-strong { color: #111827; font-weight: 700; }
+.aa-status { display: block; font-size: 11px; color: #6b7280; }
+.aa-status:empty { display: none; }
+.aa-conflict .aa-status, .aa-warn { color: #b45309; font-weight: 600; }
+.aa-ok { color: #15803d; font-weight: 600; }
+.aa-bad { color: #b91c1c; font-weight: 600; }
+.aa-confirm { color: #1d4ed8; font-weight: 600; cursor: pointer; }
+.aa-foot { margin: 8px 0 0; color: #6b7280; font-size: 12px; }
+.aa-actions { margin-top: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.aa-actions button { flex: 1; padding: 9px 12px; border-radius: 10px; font: 600 13px "Segoe UI", system-ui, sans-serif; cursor: pointer; }
+.aa-btn-ghost { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+.aa-actions .aa-btn-primary { flex: 2; background: #1d4ed8; color: #fff; border: 0; }
+.aa-actions .aa-btn-primary:disabled { background: #93a7e0; cursor: default; }
+.aa-done { flex-basis: 100%; color: #6b7280; font-size: 12px; }

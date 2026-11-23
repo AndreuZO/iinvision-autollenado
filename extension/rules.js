@@ -49,7 +49,7 @@ function hardwareAlerts(pairs) {
   return pairs.filter(p => p.section === 'Hardware check').flatMap(p => {
     if (p.label === 'Battery capacity') {
       const pct = weakBattery(pairs);
-      return pct === null ? [] : [{ name: p.label, status: 'Falló', reason: pct + '% (< ' + BATTERY_LIMIT + '%)' }];
+      return pct === null ? [] : [{ name: p.label, status: 'Falló', reason: pct + '% (mínimo ' + BATTERY_LIMIT + '%)' }];
     }
     const m = /^(Failed|Not performed)\b[,\s]*(.*)$/i.exec(p.value); // en la página no siempre hay coma
     return m ? [{ name: p.label, status: ALERT_STATUS[m[1].toLowerCase()], reason: m[2] || '' }] : [];

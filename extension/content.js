@@ -1,13 +1,64 @@
 // Botón "Autollenar" + panel de resumen. Nunca pulsa Save.
 (function () {
-  const STATUS = {
-    apply: 'Se aplicará',
-    same: 'Ya está',
-    conflict: '⚠ Distinto, no se cambia',
-    undetermined: 'No determinado',
+  // Textos en español para el panel (iinvision y Blancco están en inglés).
+  const FIELD_ES = {
+    incoming_HasWireless: '¿Tiene WiFi? (Incoming)',
+    current_HasWireless: '¿Tiene WiFi? (Current)',
+    incoming_HasEthernet: '¿Tiene Gigabit Ethernet? (Incoming)',
+    current_HasEthernet: '¿Tiene Gigabit Ethernet? (Current)',
+    current_HasTouchscreen: '¿Tiene pantalla táctil?',
+    current_HasWebcam: '¿Tiene webcam?',
+    'chk:Has Battery?': '¿Tiene batería?',
+    'chk:Has AC Adapter?': '¿Tiene adaptador AC?',
+    'attr:Fingerprint Scanner': 'Lector de huella',
+    'attr:WWAN': 'WWAN',
+    'combo:Screen Resolution': 'Resolución de pantalla',
+    'attr:Webcam': 'Webcam',
+    'attr:Touchscreen': 'Pantalla táctil',
+    'attr:Bluetooth': 'Bluetooth',
+    'combo:HDMI Ports': 'Puertos HDMI',
+    'combo:SD Card Slots': 'Ranuras SD',
+    'field:item.anti': 'Anti-Theft activado',
+    notes: 'Notas',
   };
-  const show = v => (v === true ? 'Yes' : v === false ? 'No' : v === null ? '—' : v === '' ? '(vacío)' : v === 'unspecified' ? 'Unspecified' : String(v));
+  const TEST_ES = {
+    'Battery capacity': 'Capacidad de batería',
+    'Motherboard': 'Placa madre',
+    'Pointer': 'Puntero (touchpad)',
+    'Keyboard': 'Teclado',
+    'Touchscreen': 'Pantalla táctil',
+    'Webcam': 'Webcam',
+    'Display': 'Pantalla',
+    'Speakers': 'Parlantes',
+    'Microphone': 'Micrófono',
+    'USB ports': 'Puertos USB',
+    'SIM card presence': 'Tarjeta SIM',
+  };
+  // Razones conocidas de Blancco; las nuevas se muestran en inglés hasta agregarlas aquí.
+  const REASON_ES = {
+    'internal clock is off, check cmos battery.': 'el reloj interno está desfasado, revisar la pila CMOS',
+    'component is missing or not detected.': 'el componente falta o no se detecta',
+  };
+  const NOTE = { conflict: 'Distinto, no se cambia', undetermined: 'No determinado' };
+  const show = v => (v === true ? 'Sí' : v === false ? 'No' : v === null ? '—' : v === '' ? '(vacío)'
+    : v === 'unspecified' ? 'Sin especificar' : v === 'None' ? 'Ninguno' : String(v));
+  const fieldName = c => FIELD_ES[c.target.id] || c.target.label;
+  const reasonEs = r => REASON_ES[r.trim().toLowerCase()] || r;
+  const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
   const onItemPage = () => location.pathname.startsWith('/Item/Detail/');
+
+  // Íconos dibujados en línea (nada se descarga).
+  const ICON = {
+    bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+    x: '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/>',
+    warn: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 4h.01"/>',
+  };
+  function icon(name, cls) {
+    const span = el('span', null, cls);
+    span.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[name] + '</svg>';
+    return span;
+  }
 
   const btn = document.createElement('button');
   btn.id = 'aa-btn';
@@ -36,18 +87,21 @@
     return e;
   }
 
-  function openPanel(...children) {
+  function openPanel(subtitle, children) {
     closePanel();
     panel = el('div', null, 'aa-panel');
+    const head = el('div', null, 'aa-head');
+    const titles = el('div');
+    titles.append(el('h3', 'Diagnóstico Blancco'), el('p', subtitle, 'aa-sub'));
+    head.append(icon('bolt', 'aa-logo'), titles);
     const body = el('div', null, 'aa-body');
     body.append(...children);
-    panel.append(el('h3', 'Autollenado desde Blancco'), body);
-    const close = el('button', 'Cancelar');
+    const close = el('button', 'Cancelar', 'aa-btn-ghost');
     close.type = 'button';
     close.addEventListener('click', closePanel);
     const actions = el('div', null, 'aa-actions');
     actions.append(close);
-    panel.append(actions);
+    panel.append(head, body, actions);
     document.body.appendChild(panel);
     return actions;
   }
@@ -61,86 +115,115 @@
     return { ...planChanges(proposal, state.current, state.serial, state.productType), alerts: proposal.alerts };
   }
 
+  function alertCard(a) {
+    const failed = a.status === 'Falló';
+    const card = el('div', null, 'aa-card ' + (failed ? 'aa-card-red' : 'aa-card-amber'));
+    const text = el('div');
+    text.append(el('strong', TEST_ES[a.name] || a.name),
+      el('span', a.status + (a.reason ? ' · ' + reasonEs(a.reason) : ''), 'aa-card-msg'));
+    card.append(icon(failed ? 'x' : 'warn', 'aa-icon'), text);
+    return card;
+  }
+
+  const pill = (text, cls) => el('span', text, 'aa-pill' + (cls ? ' ' + cls : ''));
+
   function run() {
     if (busy) return;
     const plan = computePlan();
-    if (plan.blocked) return openPanel(el('p', plan.blocked));
+    if (plan.blocked) return openPanel(plan.blocked, []);
 
-    // Solo se listan los cambios; lo que ya está bien se resume en una línea (panel compacto).
-    // Los atributos sin dato en el reporte no van en la tabla: se llenan a mano más abajo.
+    // Solo se listan los cambios; lo que ya está bien se resume en una línea.
+    // Los atributos sin dato en el reporte no van en la lista: se llenan a mano.
     const manual = plan.changes.filter(c => c.defaulted && c.action === 'apply');
     const listed = plan.changes.filter(c => c.action !== 'same' && !manual.includes(c));
     const sameCount = plan.changes.filter(c => c.action === 'same').length;
-    const table = el('table');
     const shown = [];
     const statusById = {};
     const confirmById = {};
-    for (const [title, group] of [['Campos (se guardan con Save)', listed.filter(c => !c.instant)],
-                                  ['Atributos (se guardan al instante)', listed.filter(c => c.instant)]]) {
-      if (!group.length) continue;
-      const head = el('tr', null, 'aa-group');
-      const th = el('td', title);
-      th.colSpan = 3;
-      head.append(th);
-      table.append(head);
-      for (const c of group) {
-        const tr = el('tr', null, 'aa-' + c.action);
-        const status = el('td', STATUS[c.action]);
-        if (c.action === 'apply' && c.confirm) {
-          const box = el('input');
-          box.type = 'checkbox';
-          const label = el('label');
-          label.append(box, ' Confirmar');
-          status.replaceChildren(label);
-          confirmById[c.target.id] = box;
-        }
-        const change = c.addition ? '+ ' + c.addition : show(c.current) + ' → ' + show(c.proposed) + (c.defaulted ? ' (por defecto)' : '');
-        tr.append(el('td', c.target.label), el('td', change), status);
-        table.append(tr);
-        if (c.action === 'apply') { shown.push(c); statusById[c.target.id] = status; }
-      }
+    const inputById = {};
+    const parts = [];
+
+    // Pruebas de Blancco que fallaron (rojo) o no se hicieron (ámbar), con su razón.
+    if (plan.alerts.length) {
+      parts.push(el('div', 'Requiere revisión', 'aa-section aa-section-red'));
+      parts.push(...plan.alerts.map(alertCard));
     }
 
-    const parts = [];
-    // Pruebas de Blancco que fallaron o no se hicieron: en rojo, con su razón.
-    for (const a of plan.alerts) {
-      parts.push(el('p', '✖ ' + a.name + ': ' + a.status + (a.reason ? ' — ' + a.reason : ''), 'aa-error'));
-    }
-    const inputById = {};
     if (manual.length) {
-      parts.push(el('p', '⚠ No se encontraron en el reporte: ' + manual.map(c => c.target.label).join(', ') +
-        '. Complétalos abajo (por defecto 1).', 'aa-warn'));
-      const box = el('div', null, 'aa-manual');
+      const card = el('div', null, 'aa-card aa-card-amber');
+      const text = el('div');
+      text.append(el('strong', 'No están en el reporte'),
+        el('span', 'Complétalos aquí (por defecto 1).', 'aa-card-msg'));
+      const inputs = el('div', null, 'aa-inputs');
       for (const c of manual) {
         const input = el('input');
         input.type = 'number';
         input.min = '0';
         input.step = '1';
         input.value = c.proposed;
-        const status = el('span', '', 'aa-muted');
-        const label = el('label', c.target.label + ' ');
-        label.append(input, ' ', status);
-        box.append(label);
+        const status = el('span', '', 'aa-status');
+        const label = el('label', fieldName(c) + ' ');
+        label.append(input, status);
+        inputs.append(label);
         shown.push(c);
         statusById[c.target.id] = status;
         inputById[c.target.id] = input;
       }
-      parts.push(box);
+      text.append(inputs);
+      card.append(icon('warn', 'aa-icon'), text);
+      parts.push(card);
     }
-    parts.push(table);
-    if (sameCount) parts.push(el('p', '✔ ' + sameCount + ' campos ya estaban bien.', 'aa-muted'));
-    if (!shown.length) parts.push(el('p', 'Nada que aplicar.', 'aa-muted'));
 
-    const actions = openPanel(...parts);
-    const apply = el('button', 'Aplicar');
+    for (const [title, group] of [['Campos que se actualizarán', listed.filter(c => !c.instant)],
+                                  ['Atributos (se guardan al instante)', listed.filter(c => c.instant)]]) {
+      if (!group.length) continue;
+      parts.push(el('div', title, 'aa-section'));
+      const list = el('div', null, 'aa-list');
+      for (const c of group) {
+        const row = el('div', null, 'aa-row aa-' + c.action);
+        const name = el('div', null, 'aa-name');
+        const status = el('span', NOTE[c.action] || '', 'aa-status');
+        name.append(el('span', fieldName(c)), status);
+        if (c.action === 'apply' && c.confirm) {
+          const box = el('input');
+          box.type = 'checkbox';
+          const label = el('label', null, 'aa-confirm');
+          label.append(box, ' Confirmar');
+          status.append(label);
+          confirmById[c.target.id] = box;
+        }
+        const change = el('div', null, 'aa-change');
+        if (c.addition) change.append(pill('+ ' + c.addition, 'aa-pill-new'));
+        else {
+          // Verde cuando se agrega algo; un "No"/"Ninguno" se muestra neutro, como en el diseño.
+          const negative = c.proposed === false || c.proposed === 'None';
+          const cls = c.action !== 'apply' ? '' : negative ? 'aa-pill-strong' : 'aa-pill-new';
+          change.append(pill(show(c.current)), el('span', '→', 'aa-arrow'), pill(show(c.proposed), cls));
+        }
+        row.append(name, change);
+        list.append(row);
+        if (c.action === 'apply') { shown.push(c); statusById[c.target.id] = status; }
+      }
+      parts.push(list);
+    }
+
+    const foot = [];
+    if (sameCount) foot.push('✔ ' + plural(sameCount, 'campo ya estaba bien', 'campos ya estaban bien') + '.');
+    foot.push(shown.length ? 'Los cambios se guardan al presionar Save.' : 'Nada que aplicar.');
+    parts.push(el('p', foot.join(' '), 'aa-foot'));
+
+    const subtitle = plural(plan.alerts.length, 'prueba con alerta', 'pruebas con alerta') + ' · ' +
+      plural(shown.length, 'campo por actualizar', 'campos por actualizar');
+    const actions = openPanel(subtitle, parts);
+    const apply = el('button', 'Aplicar cambios', 'aa-btn-primary');
     apply.type = 'button';
     apply.disabled = shown.length === 0;
-    actions.prepend(apply);
+    actions.append(apply);
     apply.addEventListener('click', async () => {
       if (busy) return;
       apply.disabled = true;
       const fresh = computePlan();
-      if (fresh.blocked) { actions.prepend(el('span', fresh.blocked, 'aa-warn')); return; }
+      if (fresh.blocked) { actions.prepend(el('span', fresh.blocked, 'aa-done aa-warn')); return; }
       const confirmed = shown.filter(c => !confirmById[c.target.id] || confirmById[c.target.id].checked);
       // Lo escrito a mano reemplaza el 1 por defecto; si no es un número, ese campo no se aplica.
       const todo = stillToApply(confirmed, fresh).flatMap(c => {
@@ -159,11 +242,12 @@
         for (const change of todo) {
           const ok = await applyChange(document, change);
           statusById[change.target.id].textContent = ok ? '✔ Aplicado' : '✘ No se pudo';
+          statusById[change.target.id].classList.add(ok ? 'aa-ok' : 'aa-bad');
         }
       } finally {
         busy = btn.disabled = false;
       }
-      actions.prepend(el('span', 'Listo. Revisa y pulsa Save.', 'aa-muted'));
+      actions.prepend(el('span', 'Listo. Revisa y pulsa Save.', 'aa-done'));
     });
   }
 })();

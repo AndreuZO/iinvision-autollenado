@@ -187,7 +187,7 @@ test('latitude 3420: cámara "Webcam" cuenta como webcam', () => {
     webcam: true, fingerprint: false, wwan: false, bluetooth: true, acAdapter: true, screenResolution: '1920x1080',
     hdmiPorts: null, sdCardSlots: null, antiTheft: 'None' });
   assert.deepEqual(p.alerts, [
-    { name: 'Battery capacity', status: 'Falló', reason: '58% (< 60%)' },
+    { name: 'Battery capacity', status: 'Falló', reason: '58% (mínimo 60%)' },
     { name: 'Motherboard', status: 'Falló', reason: 'Internal clock is off, check CMOS battery.' },
     { name: 'Pointer', status: 'No se probó', reason: '' },
   ]); // Successful y Not available (componente que no existe) se ignoran
@@ -264,7 +264,7 @@ test('alertas: formato real de la página, sin coma después de Failed', () => {
   assert.deepEqual(proposeValues([chk('Battery capacity', 'Failed 58% ( 59%)'),
     chk('Motherboard', 'Failed Internal clock is off, check CMOS battery.'),
     chk('Touchscreen', 'Not available Component is missing or not detected.')], '').alerts, [
-    { name: 'Battery capacity', status: 'Falló', reason: '58% (< 60%)' },
+    { name: 'Battery capacity', status: 'Falló', reason: '58% (mínimo 60%)' },
     { name: 'Motherboard', status: 'Falló', reason: 'Internal clock is off, check CMOS battery.' },
   ]);
 });
@@ -273,7 +273,7 @@ test('alertas: formato real de la página, sin coma después de Failed', () => {
 const chkB = value => [{ section: 'Hardware check', label: 'Battery capacity', value }];
 test('batería 59% con Successful -> alerta y nota', () => {
   const p = proposeValues(chkB('Successful 59%'), '');
-  assert.deepEqual(p.alerts, [{ name: 'Battery capacity', status: 'Falló', reason: '59% (< 60%)' }]);
+  assert.deepEqual(p.alerts, [{ name: 'Battery capacity', status: 'Falló', reason: '59% (mínimo 60%)' }]);
   assert.equal(p.batteryNote, 'Estado de Bateria : 59%');
 });
 test('batería 60% -> sin alerta ni nota', () => {

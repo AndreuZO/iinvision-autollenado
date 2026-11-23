@@ -101,10 +101,14 @@ campos Yes/No suelen venir ya cargados; lo que más varía por equipo son los
 **atributos** (Screen Resolution, Fingerprint Scanner, WWAN).
 
 **Alertas de Hardware check** *(decidido por el auditor, 2026-11-23)*: las pruebas de Blancco en
-**Failed** o **Not performed** se muestran en **rojo** arriba del panel con su razón
-(ej. "✖ Battery capacity: Falló — 58% (< 60%)", "✖ Motherboard: Falló — Internal clock is off,
-check CMOS battery.", "✖ Pointer: No se probó"). Successful se ignora; Not available también
-(el equipo no tiene ese componente) *(decisión del asistente)*. Los avisos de "valor por
+**Failed** (tarjeta roja) o **Not performed** (tarjeta ámbar) se muestran arriba del panel con su razón,
+en español cuando la razón es conocida (ej. "Capacidad de batería · Falló · 58% (mínimo 60%)",
+"Placa madre · Falló · el reloj interno está desfasado, revisar la pila CMOS", "Puntero (touchpad) · No se probó").
+Razones nuevas de Blancco se muestran en inglés hasta agregarlas al diccionario de content.js.
+Successful se ignora; Not available también (el equipo no tiene ese componente) *(decisión del asistente)*.
+**Estilo del panel** *(decidido por el auditor, 2026-11-23)*: encabezado "Diagnóstico Blancco" con resumen,
+tarjetas por prueba, lista de campos con "pastillas" valor actual → nuevo, botones Cancelar / Aplicar cambios.
+Solo letra del sistema (Segoe UI) e íconos en línea: nada se descarga. Los avisos de "valor por
 defecto" siguen en naranja.
 
 **Batería por debajo del 60%** *(regla del auditor)*: cuenta como falla aunque Blancco diga
