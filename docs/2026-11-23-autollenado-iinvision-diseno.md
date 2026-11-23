@@ -102,13 +102,13 @@ campos Yes/No suelen venir ya cargados; lo que más varía por equipo son los
 
 **Alertas de Hardware check** *(decidido por el auditor, 2026-11-23)*: las pruebas de Blancco en
 **Failed** o **Not performed** se muestran en **rojo** arriba del panel con su razón
-(ej. "✖ Battery capacity: Falló — 58% (≤ 60%)", "✖ Motherboard: Falló — Internal clock is off,
+(ej. "✖ Battery capacity: Falló — 58% (< 60%)", "✖ Motherboard: Falló — Internal clock is off,
 check CMOS battery.", "✖ Pointer: No se probó"). Successful se ignora; Not available también
 (el equipo no tiene ese componente) *(decisión del asistente)*. Los avisos de "valor por
 defecto" siguen en naranja.
 
-**Batería al 60% o menos** *(regla del auditor)*: cuenta como falla aunque Blancco diga
-Successful (Blancco usa < 59%). Genera la alerta roja y la línea "Estado de Bateria : N%" en Notas.
+**Batería por debajo del 60%** *(regla del auditor)*: cuenta como falla aunque Blancco diga
+Successful (Blancco usa < 59%); 60% no es falla. Genera la alerta roja y la línea "Estado de Bateria : N%" en Notas.
 
 **Atributos sin dato en el reporte** *(pedido del auditor)*: HDMI Ports y SD Card Slots aparecen
 como casillas numéricas debajo de las advertencias, con 1 escrito; el auditor puede cambiarlo y

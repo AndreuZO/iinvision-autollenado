@@ -44,24 +44,24 @@ function proposeValues(pairs, notes) {
 // Pruebas de "Hardware check" que el auditor debe ver en rojo: Failed y Not performed, con su razón.
 // Successful se ignora, y Not available también (el equipo no tiene ese componente).
 const ALERT_STATUS = { 'failed': 'Falló', 'not performed': 'No se probó' };
-const BATTERY_LIMIT = 60; // regla del auditor: batería al 60% o menos es una falla
+const BATTERY_LIMIT = 60; // regla del auditor: batería por debajo del 60% es una falla
 function hardwareAlerts(pairs) {
   return pairs.filter(p => p.section === 'Hardware check').flatMap(p => {
     if (p.label === 'Battery capacity') {
       const pct = weakBattery(pairs);
-      return pct === null ? [] : [{ name: p.label, status: 'Falló', reason: pct + '% (≤ ' + BATTERY_LIMIT + '%)' }];
+      return pct === null ? [] : [{ name: p.label, status: 'Falló', reason: pct + '% (< ' + BATTERY_LIMIT + '%)' }];
     }
     const m = /^(Failed|Not performed)\b[,\s]*(.*)$/i.exec(p.value); // en la página no siempre hay coma
     return m ? [{ name: p.label, status: ALERT_STATUS[m[1].toLowerCase()], reason: m[2] || '' }] : [];
   });
 }
 
-// Porcentaje de salud de la batería si está al 60% o menos (o si Blancco la marca Failed); si no, null.
+// Porcentaje de salud de la batería si está por debajo del 60% (o si Blancco la marca Failed); si no, null.
 function weakBattery(pairs) {
   const check = pairs.find(p => p.section === 'Hardware check' && p.label === 'Battery capacity');
   const pct = check && /(\d+)\s*%/.exec(check.value);
   if (!pct) return null;
-  return Number(pct[1]) <= BATTERY_LIMIT || /^Failed/i.test(check.value) ? Number(pct[1]) : null;
+  return Number(pct[1]) < BATTERY_LIMIT || /^Failed/i.test(check.value) ? Number(pct[1]) : null;
 }
 
 function batteryNote(pairs) {
