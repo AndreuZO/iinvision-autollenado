@@ -67,8 +67,10 @@
     if (plan.blocked) return openPanel(el('p', plan.blocked));
 
     // Solo se listan los cambios; lo que ya está bien se resume en una línea (panel compacto).
-    const listed = plan.changes.filter(c => c.action !== 'same');
-    const sameCount = plan.changes.length - listed.length;
+    // Los atributos sin dato en el reporte no van en la tabla: se llenan a mano más abajo.
+    const manual = plan.changes.filter(c => c.defaulted && c.action === 'apply');
+    const listed = plan.changes.filter(c => c.action !== 'same' && !manual.includes(c));
+    const sameCount = plan.changes.filter(c => c.action === 'same').length;
     const table = el('table');
     const shown = [];
     const statusById = {};
@@ -104,11 +106,27 @@
     for (const a of plan.alerts) {
       parts.push(el('p', '✖ ' + a.name + ': ' + a.status + (a.reason ? ' — ' + a.reason : ''), 'aa-error'));
     }
-    const defaulted = shown.filter(c => c.defaulted);
-    if (defaulted.length) {
-      parts.push(el('p', '⚠ No se encontraron en el reporte: ' + defaulted.map(c => c.target.label).join(', ') + '. Se pondrá 1 por defecto.', 'aa-warn'));
+    const inputById = {};
+    if (manual.length) {
+      parts.push(el('p', '⚠ No se encontraron en el reporte: ' + manual.map(c => c.target.label).join(', ') +
+        '. Complétalos abajo (por defecto 1).', 'aa-warn'));
+      const box = el('div', null, 'aa-manual');
+      for (const c of manual) {
+        const input = el('input');
+        input.type = 'number';
+        input.min = '0';
+        input.step = '1';
+        input.value = c.proposed;
+        const status = el('span', '', 'aa-muted');
+        const label = el('label', c.target.label + ' ');
+        label.append(input, ' ', status);
+        box.append(label);
+        shown.push(c);
+        statusById[c.target.id] = status;
+        inputById[c.target.id] = input;
+      }
+      parts.push(box);
     }
-    if (shown.some(c => c.instant)) parts.push(el('p', '⚠ Los atributos se guardan en iinvision al pulsar Aplicar.', 'aa-warn'));
     parts.push(table);
     if (sameCount) parts.push(el('p', '✔ ' + sameCount + ' campos ya estaban bien.', 'aa-muted'));
     if (!shown.length) parts.push(el('p', 'Nada que aplicar.', 'aa-muted'));
@@ -124,11 +142,18 @@
       const fresh = computePlan();
       if (fresh.blocked) { actions.prepend(el('span', fresh.blocked, 'aa-warn')); return; }
       const confirmed = shown.filter(c => !confirmById[c.target.id] || confirmById[c.target.id].checked);
-      const todo = stillToApply(confirmed, fresh);
+      // Lo escrito a mano reemplaza el 1 por defecto; si no es un número, ese campo no se aplica.
+      const todo = stillToApply(confirmed, fresh).flatMap(c => {
+        const input = inputById[c.target.id];
+        if (!input) return [c];
+        const value = input.value.trim();
+        if (!/^\d+$/.test(value)) { statusById[c.target.id].textContent = '✘ Falta un número'; return []; }
+        return [{ ...c, proposed: value }];
+      });
       busy = btn.disabled = true;
       try {
         for (const c of shown) {
-          if (todo.some(t => t.target.id === c.target.id)) continue;
+          if (todo.some(t => t.target.id === c.target.id) || statusById[c.target.id].textContent.startsWith('✘')) continue;
           statusById[c.target.id].textContent = confirmed.includes(c) ? '— Cambió, no se aplicó' : 'Sin confirmar, no se aplicó';
         }
         for (const change of todo) {
