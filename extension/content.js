@@ -53,10 +53,13 @@
     if (plan.blocked) return openPanel(el('p', plan.blocked));
 
     const table = el('table');
+    const pending = [];
     for (const c of plan.changes) {
       const tr = el('tr', null, 'aa-' + c.action);
-      tr.append(el('td', c.target.label), el('td', show(c.current) + ' → ' + show(c.proposed)), el('td', STATUS[c.action]));
+      const status = el('td', STATUS[c.action]);
+      tr.append(el('td', c.target.label), el('td', show(c.current) + ' → ' + show(c.proposed)), status);
       table.append(tr);
+      if (c.action === 'apply') pending.push({ change: c, status });
     }
     const parts = [table];
     if (proposal.failedChecks.length) {
@@ -65,7 +68,15 @@
     const actions = openPanel(...parts);
     const apply = el('button', 'Aplicar');
     apply.type = 'button';
-    apply.disabled = true; // se habilita en la siguiente entrega
+    apply.disabled = pending.length === 0;
+    apply.addEventListener('click', async () => {
+      apply.disabled = true;
+      for (const { change, status } of pending) {
+        const ok = await applyChange(document, change);
+        status.textContent = ok ? '✔ Aplicado' : '✘ No se pudo';
+      }
+      actions.prepend(el('span', 'Revisa y pulsa Save tú mismo.'));
+    });
     actions.prepend(apply);
   }
 })();

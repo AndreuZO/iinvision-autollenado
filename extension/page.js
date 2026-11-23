@@ -53,6 +53,36 @@ function readValue(loc) {
   return loc.input.value.trim();
 }
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Abre el combo Kendo y hace clic en la opción con ese texto exacto. Si no existe, lo cierra.
+async function pickComboOption(doc, input, text) {
+  const toggle = input.closest('kendo-multicolumncombobox').querySelector('button.k-input-button');
+  toggle.click();
+  for (let i = 0; i < 20; i++) { // hasta 2 s
+    const option = [...doc.querySelectorAll('kendo-popup li[role=option]')].find(o => o.textContent.trim() === text);
+    if (option) {
+      option.click();
+      await sleep(300);
+      return;
+    }
+    await sleep(100);
+  }
+  toggle.click();
+}
+
+// Aplica un cambio simulando al usuario (Angular no registra .checked/.value asignados a secas).
+// Devuelve true si, al volver a leer, el campo tiene el valor propuesto.
+async function applyChange(doc, change) {
+  const loc = locate(doc, change.target.id);
+  if (!loc) return false;
+  const v = change.proposed;
+  if (loc.kind === 'radio') (v ? loc.yes : loc.no).click();
+  else if (loc.kind === 'chk') { if (v === true && !loc.box.checked) loc.box.click(); } // nunca desmarca
+  else await pickComboOption(doc, loc.input, v);
+  return readValue(loc) === v;
+}
+
 function readItemState(doc) {
   const current = {};
   for (const t of TARGETS) {
