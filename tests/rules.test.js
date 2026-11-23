@@ -149,3 +149,15 @@ test('stillToApply: solo lo que se mostró en el resumen', () => {
   const shown = plan(empty()).changes.filter(c => c.target.id === 'attr:WWAN');
   assert.deepEqual(stillToApply(shown, plan(empty())).map(c => c.target.id), ['attr:WWAN']);
 });
+
+// ---- Reporte real con puerto de red (ThinkCentre M70a, todo en uno) ----
+test('m70a: Network Adapter interno -> ethernet true; sin batería ni touchscreen', () => {
+  const p = proposeValues(require('./fixtures/m70a-aio.json'), '');
+  assert.deepEqual(p.fields, { wifi: true, ethernet: true, battery: false, touchscreen: false,
+    webcam: true, fingerprint: false, wwan: false, acAdapter: null, screenResolution: '1920x1080' });
+});
+
+test('m70a: todo en uno se bloquea mientras v1 sea solo laptops', () => {
+  const p = proposeValues(require('./fixtures/m70a-aio.json'), '');
+  assert.equal(planChanges(p, {}, 'TESTSERIAL2', 'PC - All-In-One').blocked, 'Por ahora solo laptops');
+});
