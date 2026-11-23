@@ -22,7 +22,7 @@ function proposeValues(pairs, notes) {
       ethernet: internal.some(p => /^(Ethernet|Network) adapter/i.test(p.label) || /ethernet/i.test(p.value)),
       battery: has('Battery'),
       touchscreen: has('Touchscreen'),
-      webcam: anyValue(/camera/i),
+      webcam: anyValue(/camera|webcam/i), // Lenovo: "Integrated Camera"; Dell: "IntegratedWebcamHD"
       fingerprint: anyValue(/fingerprint/i),
       wwan: anyValue(/\b(WWAN|LTE|Mobile Broadband)\b/i),
       bluetooth: hw.some(p => p.label.startsWith('Bluetooth adapter')),

@@ -1,0 +1,15 @@
+[
+  {"section":"Hardware Details","label":"Manufacturer","value":"Dell Inc."},
+  {"section":"Hardware Details","label":"Serial","value":"TESTSERIAL3"},
+  {"section":"Hardware Details","label":"Autopilot status","value":"Unknown"},
+  {"section":"Hardware Details","label":"Display","value":"BOE, WCDHXNV14N4N, Native Resolution: 1920x1080, Refresh Rate: 60Hz, Size: 14.0\", Year: 2020"},
+  {"section":"Hardware Details","label":"Network Adapter","value":"Ethernet, Realtek Semiconductor Co., Ltd. RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller"},
+  {"section":"Hardware Details","label":"Wi-Fi adapter","value":"Wireless, Intel Corporation Wi-Fi 6 AX201"},
+  {"section":"Hardware Details","label":"Bluetooth adapter","value":"Intel Corp., AX201 Bluetooth"},
+  {"section":"Hardware Details","label":"USB device","value":"Microdia, Unknown model (0x6730), IntegratedWebcamHD 2.01"},
+  {"section":"Hardware Details","label":"Battery","value":"Vendor: SWD-ATL3.660, Model: DELL FH3K215, Capacity: 2131 / 3645 mAh"},
+  {"section":"Hardware check","label":"Battery capacity","value":"Failed, 58% ( 59%)"},
+  {"section":"Hardware check","label":"Motherboard","value":"Failed, Internal clock is off, check CMOS battery."},
+  {"section":"Hardware check","label":"Touchscreen","value":"Not available, Component is missing or not detected."},
+  {"section":"Hardware check","label":"Webcam","value":"Successful"}
+]

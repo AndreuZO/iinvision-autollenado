@@ -174,3 +174,11 @@ test('m70a: todo en uno se acepta y llena Current y sus atributos', () => {
     'chk:Has Battery?': 'same:false', 'chk:Has AC Adapter?': 'undetermined:null',
     'attr:Webcam': 'apply:true', 'attr:Touchscreen': 'apply:false', 'attr:Bluetooth': 'apply:true' });
 });
+
+// ---- Reporte real Dell Latitude 3420 (cámara llamada "IntegratedWebcamHD") ----
+test('latitude 3420: cámara "Webcam" cuenta como webcam', () => {
+  const p = proposeValues(require('./fixtures/latitude-3420.json'), 'CON CARGADOR DELL');
+  assert.deepEqual(p.fields, { wifi: true, ethernet: true, battery: true, touchscreen: false,
+    webcam: true, fingerprint: false, wwan: false, bluetooth: true, acAdapter: true, screenResolution: '1920x1080' });
+  assert.deepEqual(p.failedChecks, ['Battery capacity', 'Motherboard']);
+});
