@@ -53,3 +53,78 @@ test('acAdapterFromNotes', () => {
   assert.equal(acAdapterFromNotes('Sin Cargador; con cargador'), null);
   assert.equal(acAdapterFromNotes(''), null);
 });
+
+// ---- Task 2: planChanges ----
+const { planChanges, TARGETS } = require('../extension/rules.js');
+const prop = proposeValues(fixture, 'CON CARGADOR');
+const empty = () => ({
+  incoming_HasWireless: 'unspecified', current_HasWireless: 'unspecified',
+  incoming_HasEthernet: 'unspecified', current_HasEthernet: 'unspecified',
+  current_HasTouchscreen: 'unspecified', current_HasWebcam: 'unspecified',
+  'chk:Has Battery?': false, 'chk:Has AC Adapter?': false,
+  'attr:Fingerprint Scanner': 'unspecified', 'attr:WWAN': 'unspecified',
+  'combo:Screen Resolution': '',
+});
+const plan = (current, serial = 'TESTSERIAL1', type = 'PC - Notebook', p = prop) =>
+  planChanges(p, current, serial, type);
+const find = (r, id) => r.changes.find(c => c.target.id === id);
+
+test('TARGETS cubre los 11 campos', () => {
+  assert.deepEqual(TARGETS.map(t => t.id).sort(), Object.keys(empty()).sort());
+});
+
+test('campos vacíos -> apply; iguales -> same; distintos -> conflict', () => {
+  const r = plan({ ...empty(), current_HasWireless: true, incoming_HasEthernet: true });
+  assert.equal(r.blocked, null);
+  assert.equal(find(r, 'incoming_HasWireless').action, 'apply');
+  assert.equal(find(r, 'current_HasWireless').action, 'same');
+  assert.equal(find(r, 'incoming_HasEthernet').action, 'conflict');
+  assert.equal(find(r, 'incoming_HasEthernet').proposed, false);
+});
+
+test('checkbox nunca se desmarca', () => {
+  const noAc = proposeValues(fixture, 'SIN CARGADOR');
+  assert.equal(find(plan(empty()), 'chk:Has AC Adapter?').action, 'apply');
+  assert.equal(find(plan({ ...empty(), 'chk:Has AC Adapter?': true }, 'TESTSERIAL1', 'PC - Notebook', noAc), 'chk:Has AC Adapter?').action, 'conflict');
+  assert.equal(find(plan(empty(), 'TESTSERIAL1', 'PC - Notebook', noAc), 'chk:Has AC Adapter?').action, 'same');
+});
+
+test('acAdapter null -> undetermined', () => {
+  const r = plan(empty(), 'TESTSERIAL1', 'PC - Notebook', proposeValues(fixture, ''));
+  assert.equal(find(r, 'chk:Has AC Adapter?').action, 'undetermined');
+});
+
+test('combo screenResolution', () => {
+  assert.equal(find(plan(empty()), 'combo:Screen Resolution').action, 'apply');
+  assert.equal(find(plan({ ...empty(), 'combo:Screen Resolution': '1366x768' }), 'combo:Screen Resolution').action, 'conflict');
+  const noRes = { ...prop, fields: { ...prop.fields, screenResolution: null } };
+  assert.equal(find(plan(empty(), 'TESTSERIAL1', 'PC - Notebook', noRes), 'combo:Screen Resolution').action, 'undetermined');
+});
+
+test('campo que no existe en la ficha se omite', () => {
+  const cur = empty(); delete cur['attr:WWAN'];
+  assert.equal(find(plan(cur), 'attr:WWAN'), undefined);
+});
+
+test('serial distinto bloquea', () => {
+  assert.deepEqual(plan(empty(), 'OTRO'), { blocked: 'El reporte abierto no es de este equipo', changes: [] });
+});
+
+test('serial igual ignora espacios y mayúsculas', () => {
+  assert.equal(plan(empty(), ' testserial1 ').blocked, null);
+});
+
+test('serial null bloquea', () => {
+  const p = { ...prop, serial: null };
+  assert.equal(plan(empty(), 'TESTSERIAL1', 'PC - Notebook', p).blocked, 'El reporte abierto no es de este equipo');
+});
+
+test('product type sin Notebook bloquea', () => {
+  assert.deepEqual(plan(empty(), 'TESTSERIAL1', 'PC - Desktop'), { blocked: 'Por ahora solo laptops', changes: [] });
+});
+
+test('idempotente', () => {
+  const cur = empty();
+  for (const c of plan(cur).changes) if (c.action === 'apply') cur[c.target.id] = c.proposed;
+  assert.equal(plan(cur).changes.filter(c => c.action === 'apply').length, 0);
+});

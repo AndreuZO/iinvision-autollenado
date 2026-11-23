@@ -34,4 +34,41 @@ function proposeValues(pairs, notes) {
   };
 }
 
-if (typeof module !== 'undefined') module.exports = { proposeValues, acAdapterFromNotes };
+// Campos físicos de la ficha. Prefijos: (ninguno) radio por id, chk: checkbox por etiqueta,
+// attr: fila de Attributes, combo: combo Kendo en fila de Attributes.
+const TARGETS = [
+  { key: 'wifi', id: 'incoming_HasWireless', label: 'Has WiFi? (Incoming)' },
+  { key: 'wifi', id: 'current_HasWireless', label: 'Has WiFi? (Current)' },
+  { key: 'ethernet', id: 'incoming_HasEthernet', label: 'Has Gigabit Ethernet? (Incoming)' },
+  { key: 'ethernet', id: 'current_HasEthernet', label: 'Has Gigabit Ethernet? (Current)' },
+  { key: 'touchscreen', id: 'current_HasTouchscreen', label: 'Has Touchscreen?' },
+  { key: 'webcam', id: 'current_HasWebcam', label: 'Has Webcam?' },
+  { key: 'battery', id: 'chk:Has Battery?', label: 'Has Battery?' },
+  { key: 'acAdapter', id: 'chk:Has AC Adapter?', label: 'Has AC Adapter?' },
+  { key: 'fingerprint', id: 'attr:Fingerprint Scanner', label: 'Fingerprint Scanner' },
+  { key: 'wwan', id: 'attr:WWAN', label: 'WWAN' },
+  { key: 'screenResolution', id: 'combo:Screen Resolution', label: 'Screen Resolution' },
+];
+
+function actionFor(target, current, proposed) {
+  if (proposed === null) return 'undetermined';
+  if (current === proposed) return 'same';
+  const isEmpty = current === 'unspecified' || current === '' ||
+    (target.id.startsWith('chk:') && current === false);
+  return isEmpty ? 'apply' : 'conflict';
+}
+
+function planChanges(proposal, current, itemSerial, productType) {
+  if (!/notebook/i.test(productType || '')) return { blocked: 'Por ahora solo laptops', changes: [] };
+  const norm = s => (s || '').trim().toUpperCase();
+  if (!proposal.serial || norm(proposal.serial) !== norm(itemSerial)) {
+    return { blocked: 'El reporte abierto no es de este equipo', changes: [] };
+  }
+  const changes = TARGETS.filter(t => t.id in current).map(t => {
+    const proposed = proposal.fields[t.key];
+    return { target: t, current: current[t.id], proposed, action: actionFor(t, current[t.id], proposed) };
+  });
+  return { blocked: null, changes };
+}
+
+if (typeof module !== 'undefined') module.exports = { proposeValues, acAdapterFromNotes, planChanges, TARGETS };
