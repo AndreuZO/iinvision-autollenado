@@ -9,7 +9,7 @@ test('x1 yoga: valores propuestos', () => {
   const p = proposeValues(fixture, 'Case - Minor Dents; CON CARGADOR LENOVO TIPO C 65W');
   assert.equal(p.serial, 'TESTSERIAL1'); // el de Hardware Details, no el del disco
   assert.deepEqual(p.fields, { wifi: true, ethernet: false, battery: true, touchscreen: true,
-    webcam: true, fingerprint: true, wwan: false, acAdapter: true, screenResolution: '1920x1200' });
+    webcam: true, fingerprint: true, wwan: false, bluetooth: true, acAdapter: true, screenResolution: '1920x1200' });
   assert.deepEqual(p.failedChecks, ['Webcam']);
 });
 
@@ -17,7 +17,7 @@ test('sin pares de Hardware Details: todo en false, resolución null, serial nul
   const p = proposeValues([{ section: 'Erasure Results', label: 'Serial', value: 'X' }], '');
   assert.equal(p.serial, null);
   assert.deepEqual(p.fields, { wifi: false, ethernet: false, battery: false, touchscreen: false,
-    webcam: false, fingerprint: false, wwan: false, acAdapter: null, screenResolution: null });
+    webcam: false, fingerprint: false, wwan: false, bluetooth: false, acAdapter: null, screenResolution: null });
   assert.deepEqual(p.failedChecks, []);
 });
 
@@ -64,12 +64,13 @@ const empty = () => ({
   'chk:Has Battery?': false, 'chk:Has AC Adapter?': false,
   'attr:Fingerprint Scanner': 'unspecified', 'attr:WWAN': 'unspecified',
   'combo:Screen Resolution': '',
+  'attr:Webcam': 'unspecified', 'attr:Touchscreen': 'unspecified', 'attr:Bluetooth': 'unspecified',
 });
 const plan = (current, serial = 'TESTSERIAL1', type = 'PC - Notebook', p = prop) =>
   planChanges(p, current, serial, type);
 const find = (r, id) => r.changes.find(c => c.target.id === id);
 
-test('TARGETS cubre los 11 campos', () => {
+test('TARGETS cubre los 14 campos', () => {
   assert.deepEqual(TARGETS.map(t => t.id).sort(), Object.keys(empty()).sort());
 });
 
@@ -120,7 +121,7 @@ test('serial null bloquea', () => {
 });
 
 test('product type sin Notebook bloquea', () => {
-  assert.deepEqual(plan(empty(), 'TESTSERIAL1', 'PC - Desktop'), { blocked: 'Por ahora solo laptops', changes: [] });
+  assert.deepEqual(plan(empty(), 'TESTSERIAL1', 'PC - Desktop'), { blocked: 'Por ahora solo laptops y todo en uno', changes: [] });
 });
 
 test('idempotente', () => {
@@ -154,10 +155,22 @@ test('stillToApply: solo lo que se mostró en el resumen', () => {
 test('m70a: Network Adapter interno -> ethernet true; sin batería ni touchscreen', () => {
   const p = proposeValues(require('./fixtures/m70a-aio.json'), '');
   assert.deepEqual(p.fields, { wifi: true, ethernet: true, battery: false, touchscreen: false,
-    webcam: true, fingerprint: false, wwan: false, acAdapter: null, screenResolution: '1920x1080' });
+    webcam: true, fingerprint: false, wwan: false, bluetooth: true, acAdapter: null, screenResolution: '1920x1080' });
 });
 
-test('m70a: todo en uno se bloquea mientras v1 sea solo laptops', () => {
+test('m70a: todo en uno se acepta y llena Current y sus atributos', () => {
   const p = proposeValues(require('./fixtures/m70a-aio.json'), '');
-  assert.equal(planChanges(p, {}, 'TESTSERIAL2', 'PC - All-In-One').blocked, 'Por ahora solo laptops');
+  const cur = { incoming_HasWireless: true, current_HasWireless: 'unspecified', incoming_HasEthernet: true,
+    current_HasEthernet: 'unspecified', current_HasTouchscreen: 'unspecified', current_HasWebcam: 'unspecified',
+    'chk:Has Battery?': false, 'chk:Has AC Adapter?': false,
+    'attr:Webcam': 'unspecified', 'attr:Touchscreen': 'unspecified', 'attr:Bluetooth': 'unspecified' };
+  const r = planChanges(p, cur, 'TESTSERIAL2', 'PC - All-In-One');
+  assert.equal(r.blocked, null);
+  const act = Object.fromEntries(r.changes.map(c => [c.target.id, c.action + ':' + c.proposed]));
+  assert.deepEqual(act, {
+    incoming_HasWireless: 'same:true', current_HasWireless: 'apply:true',
+    incoming_HasEthernet: 'same:true', current_HasEthernet: 'apply:true',
+    current_HasTouchscreen: 'apply:false', current_HasWebcam: 'apply:true',
+    'chk:Has Battery?': 'same:false', 'chk:Has AC Adapter?': 'undetermined:null',
+    'attr:Webcam': 'apply:true', 'attr:Touchscreen': 'apply:false', 'attr:Bluetooth': 'apply:true' });
 });

@@ -25,6 +25,7 @@ function proposeValues(pairs, notes) {
       webcam: anyValue(/camera/i),
       fingerprint: anyValue(/fingerprint/i),
       wwan: anyValue(/\b(WWAN|LTE|Mobile Broadband)\b/i),
+      bluetooth: hw.some(p => p.label.startsWith('Bluetooth adapter')),
       acAdapter: acAdapterFromNotes(notes),
       screenResolution: res ? res[1] : null,
     },
@@ -48,6 +49,10 @@ const TARGETS = [
   { key: 'fingerprint', id: 'attr:Fingerprint Scanner', label: 'Fingerprint Scanner' },
   { key: 'wwan', id: 'attr:WWAN', label: 'WWAN' },
   { key: 'screenResolution', id: 'combo:Screen Resolution', label: 'Screen Resolution' },
+  // Atributos que trae la ficha de un todo en uno (en laptops estas filas son de solo lectura)
+  { key: 'webcam', id: 'attr:Webcam', label: 'Webcam (atributo)' },
+  { key: 'touchscreen', id: 'attr:Touchscreen', label: 'Touchscreen (atributo)' },
+  { key: 'bluetooth', id: 'attr:Bluetooth', label: 'Bluetooth (atributo)' },
 ];
 
 function actionFor(target, current, proposed) {
@@ -59,7 +64,7 @@ function actionFor(target, current, proposed) {
 }
 
 function planChanges(proposal, current, itemSerial, productType) {
-  if (!/notebook/i.test(productType || '')) return { blocked: 'Por ahora solo laptops', changes: [] };
+  if (!/notebook|all-in-one/i.test(productType || '')) return { blocked: 'Por ahora solo laptops y todo en uno', changes: [] };
   const norm = s => (s || '').trim().toUpperCase();
   if (!proposal.serial || norm(proposal.serial) !== norm(itemSerial)) {
     return { blocked: 'El reporte abierto no es de este equipo', changes: [] };

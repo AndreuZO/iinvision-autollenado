@@ -6,6 +6,7 @@
   {"section":"Hardware Details","label":"Display","value":"Lenovo Group Limited, LEN-M70a-3-CA M215HCA-L3B, Native Resolution: 1920x1080, Refresh Rate: 60Hz, Size: 22, Year: 2021"},
   {"section":"Hardware Details","label":"Network Adapter","value":"Ethernet, Realtek Semiconductor Co., Ltd. RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller"},
   {"section":"Hardware Details","label":"Wi-Fi adapter","value":"Wireless, Intel Corporation Alder Lake-S PCH CNVi WiFi, Wi-Fi 6 AX201 160MHz"},
+  {"section":"Hardware Details","label":"Bluetooth adapter","value":"Intel Corp., AX201 Bluetooth, Version: 5.2"},
   {"section":"Hardware Details","label":"Optical Drive","value":"HL-DT-ST, Type: DVD-RAM, DVDRAM GUE1N"},
   {"section":"Hardware Details","label":"USB device","value":"Dell Computer Corp., KB216 Wired Keyboard"},
   {"section":"Hardware Details","label":"USB device","value":"Chicony Electronics Co., Ltd, Unknown model (0xb6f5), SunplusIT Inc, Integrated 5M Camera 2.01"},

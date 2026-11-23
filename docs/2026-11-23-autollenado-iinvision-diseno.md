@@ -100,9 +100,16 @@ propuesto, el resumen lo muestra como aviso y **no se cambia**. En la práctica 
 campos Yes/No suelen venir ya cargados; lo que más varía por equipo son los
 **atributos** (Screen Resolution, Fingerprint Scanner, WWAN).
 
-**Solo laptops en v1** *(decidido por el auditor)*: si el "Product Type" de la ficha no
-es de tipo Notebook, el botón avisa "Por ahora solo laptops" y no hace nada. Desktops y
-otros equipos, en una versión posterior.
+**Laptops y todo en uno** *(decidido por el auditor; todo en uno agregado el 2026-11-23)*:
+si el "Product Type" de la ficha no es Notebook ni All-In-One, el botón avisa "Por ahora
+solo laptops y todo en uno" y no hace nada. Desktops y otros equipos, en una versión
+posterior. En la ficha de un todo en uno los atributos son Webcam, Touchscreen y
+Bluetooth (Yes/No) en lugar de Fingerprint, WWAN y Screen Resolution; se llenan con las
+mismas reglas de Webcam y Touchscreen, y Bluetooth = existe "Bluetooth adapter" en
+Hardware Details. En laptops esas filas son de solo lectura (tipo Model) y se ignoran.
+Verificado en el todo en uno 11933370086 (ThinkCentre M70a), que además confirmó la
+regla de Ethernet ("Network Adapter: Ethernet … Gigabit Ethernet Controller") y mostró
+"Autopilot status: Not enrolled" ↔ Anti Theft = "None".
 
 **Fuera de alcance** *(decisión del asistente)*: "Active Mgmt. Tech (AMT) Unconfigured"
 no se toca (no está en la lista del auditor).
@@ -187,7 +194,7 @@ antes de pasar a la siguiente.
 | iinvision cambia su diseño | Falla segura + localizar elementos por texto/ids estables |
 | Texto exacto de Computrace/Autopilot en Blancco desconocido | Conseguir un reporte de un equipo bloqueado antes de la entrega 4 |
 | Formato de Ethernet en el reporte no visto aún | Conseguir un reporte de un equipo con puerto RJ45 antes de la entrega 1 |
-| Equipos de escritorio | Fuera de v1: la extensión se niega en fichas que no sean Notebook |
+| Equipos de escritorio | Fuera de v1: la extensión se niega en fichas que no sean Notebook ni All-In-One |
 
 ## 10. Decisiones dejadas al desarrollador
 - Aspecto visual del botón y del resumen.
