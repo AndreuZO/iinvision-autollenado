@@ -126,6 +126,23 @@ async function waitFor(find) {
   return null;
 }
 
+// Selecciona la pestaña Item Information y devuelve el panel Notes & Damages ya visible (o null).
+// Item Information = la pestaña dueña del panel donde está #notes. En otra pestaña
+// (p. ej. Project Details) #notes existe pero oculto. Kendo nombra la pestaña igual que su
+// panel ("...-tabpanel-<id>-1" ↔ "...-tab-<id>-1"): no depende del idioma.
+async function showItemInformation(doc) {
+  const tabPanel = doc.querySelector('#notes')?.closest('[role=tabpanel]');
+  if (tabPanel && tabPanel.getAttribute('aria-hidden') === 'true') {
+    doc.getElementById(tabPanel.id.replace('-tabpanel-', '-tab-'))?.click();
+  } else if (!doc.querySelector('#notes')) {
+    [...doc.querySelectorAll('li[role=tab]')].find(t => /^item information$/i.test(t.textContent.trim()))?.click();
+  }
+  return waitFor(() => {
+    const s = doc.querySelector('#notes')?.closest('kendo-expansionpanel');
+    return s && s.offsetParent !== null ? s : null;
+  });
+}
+
 // Después de aplicar: baja el reporte hasta "Hardware check", selecciona la pestaña
 // Item Information, baja hasta Notes & Damages y pulsa Add de Damages.
 // Notes & Damages se ubica por estructura (el panel donde está #notes), no por su texto.
@@ -138,12 +155,7 @@ async function goToDamages(doc) {
     while (box && !(box.scrollHeight > box.clientHeight && /(auto|scroll)/.test(getComputedStyle(box).overflowY))) box = box.parentElement;
     if (box) box.scrollTop += heading.getBoundingClientRect().top - box.getBoundingClientRect().top - 8;
   }
-  // Si Item Information no es la pestaña activa, #notes no existe: se selecciona por su texto
-  // (la barra de pestañas se protege de la traducción).
-  if (!doc.querySelector('#notes')) {
-    [...doc.querySelectorAll('li[role=tab]')].find(t => /^item information$/i.test(t.textContent.trim()))?.click();
-  }
-  const section = await waitFor(() => doc.querySelector('#notes')?.closest('kendo-expansionpanel'));
+  const section = await showItemInformation(doc);
   if (!section) return false;
   if (!section.classList.contains('k-expanded')) {
     section.querySelector('.k-expander-header')?.click(); // estaba plegado: se despliega

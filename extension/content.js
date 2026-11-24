@@ -125,7 +125,7 @@
   }
 
   function alertCard(a) {
-    const failed = a.status === 'Falló';
+    const failed = a.status !== 'No se probó'; // Falló o No detectada: rojo; No se probó: ámbar
     const card = el('div', null, 'aa-card ' + (failed ? 'aa-card-red' : 'aa-card-amber'));
     const text = el('div');
     text.append(el('strong', TEST_ES[a.name] || a.name),
@@ -238,6 +238,7 @@
     apply.addEventListener('click', async () => {
       if (busy) return;
       apply.disabled = true;
+      await showItemInformation(document); // los combos no abren en una pestaña oculta
       const fresh = computePlan();
       if (fresh.blocked) { actions.prepend(el('span', fresh.blocked, 'aa-done aa-warn')); return; }
       const confirmed = shown.filter(c => !confirmById[c.target.id] || confirmById[c.target.id].checked);

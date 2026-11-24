@@ -280,3 +280,18 @@ test('batería 60% -> sin alerta ni nota', () => {
   const p = proposeValues(chkB('Successful, 60%'), '');
   assert.deepEqual([p.alerts, p.batteryNote], [[], null]);
 });
+
+// ---- Regla del auditor: batería "Not available" = requiere revisión + nota "Bateria no detectada" ----
+test('batería no detectada -> alerta y nota', () => {
+  const p = proposeValues(chkB('Not available Component is missing or not detected.'), '');
+  assert.deepEqual(p.alerts, [{ name: 'Battery capacity', status: 'No detectada', reason: 'Component is missing or not detected.' }]);
+  assert.equal(p.batteryNote, 'Bateria no detectada');
+});
+test('batería no detectada -> se agrega a notas; si ya hay una nota de batería no se toca', () => {
+  const p = proposeValues(chkB('Not available, Component is missing or not detected.'), '');
+  p.serial = 'S1';
+  const planB = notes => planChanges(p, { notes }, 'S1', 'PC - Notebook').changes[0];
+  assert.deepEqual([planB('CON CARGADOR').action, planB('CON CARGADOR').proposed], ['apply', 'CON CARGADOR; Bateria no detectada']);
+  assert.equal(planB('X; Bateria no detectada').action, 'same');
+  assert.equal(planB('X; Estado de Bateria : 40%').action, 'conflict');
+});

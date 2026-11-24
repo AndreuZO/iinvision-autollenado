@@ -48,6 +48,8 @@ const BATTERY_LIMIT = 60; // regla del auditor: batería por debajo del 60% es u
 function hardwareAlerts(pairs) {
   return pairs.filter(p => p.section === 'Hardware check').flatMap(p => {
     if (p.label === 'Battery capacity') {
+      const missing = batteryMissing(pairs);
+      if (missing !== null) return [{ name: p.label, status: 'No detectada', reason: missing }];
       const pct = weakBattery(pairs);
       return pct === null ? [] : [{ name: p.label, status: 'Falló', reason: pct + '% (mínimo ' + BATTERY_LIMIT + '%)' }];
     }
@@ -64,7 +66,16 @@ function weakBattery(pairs) {
   return Number(pct[1]) < BATTERY_LIMIT || /^Failed/i.test(check.value) ? Number(pct[1]) : null;
 }
 
+// Regla del auditor: "Not available" en Battery capacity = batería no detectada (requiere revisión).
+// Devuelve la razón de Blancco ('' si no trae) o null si la batería sí se detectó.
+function batteryMissing(pairs) {
+  const check = pairs.find(p => p.section === 'Hardware check' && p.label === 'Battery capacity');
+  const m = check && /^Not available\b[,\s]*(.*)$/i.exec(check.value);
+  return m ? m[1] : null;
+}
+
 function batteryNote(pairs) {
+  if (batteryMissing(pairs) !== null) return 'Bateria no detectada';
   const pct = weakBattery(pairs);
   return pct === null ? null : 'Estado de Bateria : ' + pct + '%';
 }
@@ -124,9 +135,9 @@ function planChanges(proposal, current, itemSerial, productType) {
   return { blocked: null, changes };
 }
 
-// Agrega la línea al final de las notas; si ya hay una nota de batería distinta, no se toca.
+// Agrega la línea al final de las notas; si ya hay otra nota de batería, no se toca.
 function noteChange(target, notes, line) {
-  const action = notes.includes(line) ? 'same' : /estado de bateria/i.test(notes) ? 'conflict' : 'apply';
+  const action = notes.includes(line) ? 'same' : /estado de bateria|bateria no detectada/i.test(notes) ? 'conflict' : 'apply';
   const proposed = action === 'apply' ? (notes.trim() ? notes.trim() + '; ' + line : line) : notes;
   return { target, current: notes, proposed, action, addition: line, defaulted: false, instant: false, confirm: false };
 }
