@@ -1,14 +1,28 @@
 /* Panel de autollenado. Solo letra del sistema e íconos en línea: nada se descarga. */
 #aa-btn {
   position: fixed; right: 20px; bottom: 20px; z-index: 99999;
-  padding: 9px 16px; border: 0; border-radius: 10px;
-  background: #1d4ed8; color: #fff; font: 600 13px "Segoe UI", system-ui, sans-serif; cursor: pointer;
-  box-shadow: 0 4px 14px rgba(29, 78, 216, .4);
+  display: flex; align-items: center; gap: 12px; min-width: 240px;
+  padding: 10px 18px 10px 10px; border: 1px solid #334a7a; border-radius: 16px;
+  background: #0b1e4a; color: #fff; font: 13px/1.25 "Segoe UI", system-ui, sans-serif;
+  text-align: left; cursor: pointer; box-shadow: 0 8px 24px rgba(2, 8, 30, .45);
+  transition: border-color .15s, background .15s;
 }
+#aa-btn:hover { border-color: #4f6db0; background: #0e2558; }
 #aa-btn[hidden] { display: none; }
-#aa-btn.aa-btn-done { background: #16a34a; box-shadow: 0 4px 14px rgba(22, 163, 74, .4); } /* todo aplicado */
+.aa-btn-icon { flex: none; width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center;
+  background: #12346e; color: #22c3e6; }
+.aa-btn-icon svg { width: 20px; height: 20px; }
+.aa-btn-text { flex: 1; display: flex; flex-direction: column; }
+.aa-btn-title { font-size: 16px; font-weight: 700; color: #fff; }
+.aa-btn-sub { font-size: 12.5px; color: #8fb0e8; }
+.aa-btn-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #22c3e6; }
+/* todo aplicado */
+#aa-btn.aa-btn-done { background: #0b3a24; border-color: #1f7a4a; }
+#aa-btn.aa-btn-done .aa-btn-icon { background: #125c38; color: #4ade80; }
+#aa-btn.aa-btn-done .aa-btn-sub { color: #86efac; }
+#aa-btn.aa-btn-done .aa-btn-dot { background: #4ade80; }
 .aa-panel {
-  position: fixed; right: 20px; bottom: 68px; z-index: 99999;
+  position: fixed; right: 20px; bottom: 94px; z-index: 99999;
   width: 400px; max-width: calc(100vw - 40px); max-height: 60vh;
   display: flex; flex-direction: column; box-sizing: border-box;
   padding: 16px; border-radius: 16px; background: #f5f7fa; color: #111827;
@@ -49,7 +63,7 @@
 .aa-pill-bad { background: #fdecec; color: #b91c1c; font-weight: 700; }
 .aa-unique { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #e0e7ff; color: #1d4ed8;
   font-size: 12px; font-weight: 600; vertical-align: middle; }
-.aa-toast { position: fixed; right: 20px; bottom: 68px; z-index: 99999; max-width: 360px; padding: 10px 14px;
+.aa-toast { position: fixed; right: 20px; bottom: 94px; z-index: 99999; max-width: 360px; padding: 10px 14px;
   border-radius: 10px; background: #111827; color: #fff; font: 13px/1.4 "Segoe UI", system-ui, sans-serif;
   box-shadow: 0 8px 24px rgba(15, 23, 42, .35); }
 .aa-status { display: block; font-size: 11px; color: #6b7280; }
