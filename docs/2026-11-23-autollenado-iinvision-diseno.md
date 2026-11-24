@@ -108,7 +108,10 @@ Razones nuevas de Blancco se muestran en inglés hasta agregarlas al diccionario
 Successful se ignora; Not available también (el equipo no tiene ese componente) *(decisión del asistente)*.
 **Estilo del panel** *(decidido por el auditor, 2026-11-23)*: encabezado "Diagnóstico Blancco" con resumen,
 tarjetas por prueba, lista de campos con "pastillas" valor actual → nuevo, botones Cancelar / Aplicar cambios.
-Solo letra del sistema (Segoe UI) e íconos en línea: nada se descarga. Los avisos de "valor por
+Solo letra del sistema (Segoe UI) e íconos en línea: nada se descarga. Junto al título va el unique del equipo; la línea de batería de Notas va en rojo; los campos Current no llevan "(Current)".
+**Aplicar cambios** *(decidido por el auditor, 2026-11-23)*: aplica, cierra el panel, baja el reporte hasta "Hardware check" y pulsa **Add** del módulo Damages (ubicado por estructura: el único botón Add del panel donde están las Notas). Si algún campo sale ✘, el panel queda abierto y no se abre Damages. Sin cambios pendientes, el botón igual lleva a Damages.
+**Página traducida por Chrome** *(pedido del auditor)*: la extensión marca translate="no" el reporte Blancco, la tabla de atributos, los combos abiertos y su propio panel apenas aparecen; las casillas se ubican por clave i18n (item.hasBattery, item.hasAdapter) e ids, que no cambian con el idioma. Si el reporte ya llegó traducido, el panel lo dice y no propone nada (nunca datos equivocados).
+Los avisos de "valor por
 defecto" siguen en naranja.
 
 **Batería por debajo del 60%** *(regla del auditor)*: cuenta como falla aunque Blancco diga

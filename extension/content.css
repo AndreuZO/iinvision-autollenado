@@ -45,6 +45,12 @@
 .aa-pill { padding: 1px 9px; border-radius: 999px; background: #f1f3f6; color: #4b5563; white-space: nowrap; }
 .aa-pill-new { background: #e7f7ee; color: #15803d; font-weight: 700; }
 .aa-pill-strong { color: #111827; font-weight: 700; }
+.aa-pill-bad { background: #fdecec; color: #b91c1c; font-weight: 700; }
+.aa-unique { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #e0e7ff; color: #1d4ed8;
+  font-size: 12px; font-weight: 600; vertical-align: middle; }
+.aa-toast { position: fixed; right: 20px; bottom: 68px; z-index: 99999; max-width: 360px; padding: 10px 14px;
+  border-radius: 10px; background: #111827; color: #fff; font: 13px/1.4 "Segoe UI", system-ui, sans-serif;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .35); }
 .aa-status { display: block; font-size: 11px; color: #6b7280; }
 .aa-status:empty { display: none; }
 .aa-conflict .aa-status, .aa-warn { color: #b45309; font-weight: 600; }

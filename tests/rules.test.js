@@ -63,7 +63,7 @@ const empty = () => ({
   incoming_HasWireless: 'unspecified', current_HasWireless: 'unspecified',
   incoming_HasEthernet: 'unspecified', current_HasEthernet: 'unspecified',
   current_HasTouchscreen: 'unspecified', current_HasWebcam: 'unspecified',
-  'chk:Has Battery?': false, 'chk:Has AC Adapter?': false,
+  'chk:item.hasBattery': false, 'chk:item.hasAdapter': false,
   'attr:Fingerprint Scanner': 'unspecified', 'attr:WWAN': 'unspecified',
   'combo:Screen Resolution': '',
   'attr:Webcam': 'unspecified', 'attr:Touchscreen': 'unspecified', 'attr:Bluetooth': 'unspecified',
@@ -89,14 +89,14 @@ test('campos vacíos -> apply; iguales -> same; distintos -> conflict', () => {
 
 test('checkbox nunca se desmarca', () => {
   const noAc = proposeValues(fixture, 'SIN CARGADOR');
-  assert.equal(find(plan(empty()), 'chk:Has AC Adapter?').action, 'apply');
-  assert.equal(find(plan({ ...empty(), 'chk:Has AC Adapter?': true }, 'TESTSERIAL1', 'PC - Notebook', noAc), 'chk:Has AC Adapter?').action, 'conflict');
-  assert.equal(find(plan(empty(), 'TESTSERIAL1', 'PC - Notebook', noAc), 'chk:Has AC Adapter?').action, 'same');
+  assert.equal(find(plan(empty()), 'chk:item.hasAdapter').action, 'apply');
+  assert.equal(find(plan({ ...empty(), 'chk:item.hasAdapter': true }, 'TESTSERIAL1', 'PC - Notebook', noAc), 'chk:item.hasAdapter').action, 'conflict');
+  assert.equal(find(plan(empty(), 'TESTSERIAL1', 'PC - Notebook', noAc), 'chk:item.hasAdapter').action, 'same');
 });
 
 test('acAdapter null -> undetermined', () => {
   const r = plan(empty(), 'TESTSERIAL1', 'PC - Notebook', proposeValues(fixture, ''));
-  assert.equal(find(r, 'chk:Has AC Adapter?').action, 'undetermined');
+  assert.equal(find(r, 'chk:item.hasAdapter').action, 'undetermined');
 });
 
 test('combo screenResolution', () => {
@@ -167,7 +167,7 @@ test('m70a: todo en uno se acepta y llena Current y sus atributos', () => {
   const p = proposeValues(require('./fixtures/m70a-aio.json'), '');
   const cur = { incoming_HasWireless: true, current_HasWireless: 'unspecified', incoming_HasEthernet: true,
     current_HasEthernet: 'unspecified', current_HasTouchscreen: 'unspecified', current_HasWebcam: 'unspecified',
-    'chk:Has Battery?': false, 'chk:Has AC Adapter?': false,
+    'chk:item.hasBattery': false, 'chk:item.hasAdapter': false,
     'attr:Webcam': 'unspecified', 'attr:Touchscreen': 'unspecified', 'attr:Bluetooth': 'unspecified' };
   const r = planChanges(p, cur, 'TESTSERIAL2', 'PC - All-In-One');
   assert.equal(r.blocked, null);
@@ -176,7 +176,7 @@ test('m70a: todo en uno se acepta y llena Current y sus atributos', () => {
     incoming_HasWireless: 'same:true', current_HasWireless: 'apply:true',
     incoming_HasEthernet: 'same:true', current_HasEthernet: 'apply:true',
     current_HasTouchscreen: 'apply:false', current_HasWebcam: 'apply:true',
-    'chk:Has Battery?': 'same:false', 'chk:Has AC Adapter?': 'undetermined:null',
+    'chk:item.hasBattery': 'same:false', 'chk:item.hasAdapter': 'undetermined:null',
     'attr:Webcam': 'apply:true', 'attr:Touchscreen': 'apply:false', 'attr:Bluetooth': 'apply:true' });
 });
 

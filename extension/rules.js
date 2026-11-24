@@ -69,7 +69,7 @@ function batteryNote(pairs) {
   return pct === null ? null : 'Estado de Bateria : ' + pct + '%';
 }
 
-// Campos físicos de la ficha. Prefijos: (ninguno) radio por id, chk: checkbox por etiqueta,
+// Campos físicos de la ficha. Prefijos: (ninguno) radio por id, chk: checkbox por clave i18n de su etiqueta (no cambia con el idioma),
 // attr: fila de Attributes, combo: combo Kendo en fila de Attributes.
 const TARGETS = [
   { key: 'wifi', id: 'incoming_HasWireless', label: 'Has WiFi? (Incoming)' },
@@ -78,8 +78,8 @@ const TARGETS = [
   { key: 'ethernet', id: 'current_HasEthernet', label: 'Has Gigabit Ethernet? (Current)' },
   { key: 'touchscreen', id: 'current_HasTouchscreen', label: 'Has Touchscreen?' },
   { key: 'webcam', id: 'current_HasWebcam', label: 'Has Webcam?' },
-  { key: 'battery', id: 'chk:Has Battery?', label: 'Has Battery?' },
-  { key: 'acAdapter', id: 'chk:Has AC Adapter?', label: 'Has AC Adapter?' },
+  { key: 'battery', id: 'chk:item.hasBattery', label: 'Has Battery?' },
+  { key: 'acAdapter', id: 'chk:item.hasAdapter', label: 'Has AC Adapter?' },
   { key: 'fingerprint', id: 'attr:Fingerprint Scanner', label: 'Fingerprint Scanner' },
   { key: 'wwan', id: 'attr:WWAN', label: 'WWAN' },
   { key: 'screenResolution', id: 'combo:Screen Resolution', label: 'Screen Resolution' },

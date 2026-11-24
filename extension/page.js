@@ -37,8 +37,8 @@ function locate(doc, id) {
     return yes && { kind: 'radio', yes, no: doc.getElementById(name + '_false') };
   }
   if (kind === 'chk') {
-    const label = [...doc.querySelectorAll('kendo-label')].find(k => k.textContent.trim() === name);
-    const box = label?.closest('.form-group')?.querySelector('input[type=checkbox]');
+    const box = formElement(doc, name)?.querySelector('input[type=checkbox]') ||
+      doc.querySelector(`kendo-label[title="${name}"]`)?.closest('.form-group')?.querySelector('input[type=checkbox]');
     return box && { kind: 'chk', box };
   }
   if (kind === 'field') {
@@ -98,6 +98,40 @@ async function applyChange(doc, change) {
   }
   else await pickComboOption(doc, loc.input, v);
   return readValue(loc) === v;
+}
+
+// Traducción de Chrome: reemplaza los textos de la página y la extensión lee textos
+// (reporte Blancco, nombres de atributos, opciones de combos). Esas zonas se marcan
+// translate="no" apenas aparecen, así se quedan en el idioma original aunque el
+// resto de la página se traduzca.
+const NO_TRANSLATE = '#reportBody, kendo-popup, .aa-panel, kendo-card:has([id^="toggleValue"]), kendo-card:has(kendo-multicolumncombobox)';
+function protectFromTranslation(doc) {
+  const mark = () => doc.querySelectorAll(NO_TRANSLATE).forEach(e => {
+    if (e.getAttribute('translate') !== 'no') e.setAttribute('translate', 'no');
+  });
+  mark();
+  new MutationObserver(mark).observe(doc.body, { childList: true, subtree: true });
+}
+
+// true si Chrome ya tradujo el reporte (antes de que se pudiera proteger): sus textos no son confiables.
+const reportTranslated = report => !!report.querySelector('font');
+
+// Después de aplicar: baja el reporte hasta "Hardware check" y pulsa Add del módulo Damages.
+// Damages se ubica por estructura (el panel donde están las Notas), no por su texto.
+function goToDamages(doc) {
+  const report = doc.getElementById('reportBody');
+  const heading = report && [...report.querySelectorAll('h1, h2, h3, h4')]
+    .find(h => /^hardware check$/i.test(h.textContent.trim()));
+  if (heading) {
+    let box = heading.parentElement; // contenedor con scroll del reporte
+    while (box && !(box.scrollHeight > box.clientHeight && /(auto|scroll)/.test(getComputedStyle(box).overflowY))) box = box.parentElement;
+    if (box) box.scrollTop += heading.getBoundingClientRect().top - box.getBoundingClientRect().top - 8;
+  }
+  const adds = doc.querySelector('#notes')?.closest('kendo-expansionpanel')?.querySelectorAll('button.btnAdd') || [];
+  if (adds.length !== 1) return false; // no se reconoce el botón: mejor no pulsar nada
+  adds[0].scrollIntoView({ block: 'center' });
+  adds[0].click();
+  return true;
 }
 
 function readItemState(doc) {

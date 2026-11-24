@@ -3,13 +3,13 @@
   // Textos en español para el panel (iinvision y Blancco están en inglés).
   const FIELD_ES = {
     incoming_HasWireless: '¿Tiene WiFi? (Incoming)',
-    current_HasWireless: '¿Tiene WiFi? (Current)',
+    current_HasWireless: '¿Tiene WiFi?',
     incoming_HasEthernet: '¿Tiene Gigabit Ethernet? (Incoming)',
-    current_HasEthernet: '¿Tiene Gigabit Ethernet? (Current)',
+    current_HasEthernet: '¿Tiene Gigabit Ethernet?',
     current_HasTouchscreen: '¿Tiene pantalla táctil?',
     current_HasWebcam: '¿Tiene webcam?',
-    'chk:Has Battery?': '¿Tiene batería?',
-    'chk:Has AC Adapter?': '¿Tiene adaptador AC?',
+    'chk:item.hasBattery': '¿Tiene batería?',
+    'chk:item.hasAdapter': '¿Tiene adaptador AC?',
     'attr:Fingerprint Scanner': 'Lector de huella',
     'attr:WWAN': 'WWAN',
     'combo:Screen Resolution': 'Resolución de pantalla',
@@ -64,8 +64,10 @@
   btn.id = 'aa-btn';
   btn.type = 'button';
   btn.textContent = 'Autollenar';
+  btn.setAttribute('translate', 'no');
   btn.addEventListener('click', run);
   document.body.appendChild(btn);
+  protectFromTranslation(document);
 
   let panel = null;
   let busy = false;
@@ -90,9 +92,13 @@
   function openPanel(subtitle, children) {
     closePanel();
     panel = el('div', null, 'aa-panel');
+    panel.setAttribute('translate', 'no');
     const head = el('div', null, 'aa-head');
     const titles = el('div');
-    titles.append(el('h3', 'Diagnóstico Blancco'), el('p', subtitle, 'aa-sub'));
+    const h3 = el('h3', 'Diagnóstico Blancco ');
+    const unique = location.pathname.split('/').filter(Boolean).pop(); // /Item/Detail/<unique>
+    if (/^\d+$/.test(unique)) h3.append(el('span', unique, 'aa-unique'));
+    titles.append(h3, el('p', subtitle, 'aa-sub'));
     head.append(icon('bolt', 'aa-logo'), titles);
     const body = el('div', null, 'aa-body');
     body.append(...children);
@@ -110,6 +116,9 @@
   function computePlan() {
     const report = document.getElementById('reportBody');
     if (!report) return { blocked: 'Abre primero el reporte Blancco', changes: [], alerts: [] };
+    if (reportTranslated(report)) {
+      return { blocked: 'Chrome tradujo el reporte Blancco. Pulsa F5 y vuelve a abrirlo; la extensión lo mantiene en su idioma original.', changes: [], alerts: [] };
+    }
     const state = readItemState(document);
     const proposal = proposeValues(readReportPairs(report), state.notes);
     return { ...planChanges(proposal, state.current, state.serial, state.productType), alerts: proposal.alerts };
@@ -126,6 +135,14 @@
   }
 
   const pill = (text, cls) => el('span', text, 'aa-pill' + (cls ? ' ' + cls : ''));
+
+  // Aviso breve abajo a la derecha (el panel ya se cerró).
+  function toast(text) {
+    const t = el('div', text, 'aa-toast');
+    t.setAttribute('translate', 'no');
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 7000);
+  }
 
   function run() {
     if (busy) return;
@@ -193,7 +210,7 @@
           confirmById[c.target.id] = box;
         }
         const change = el('div', null, 'aa-change');
-        if (c.addition) change.append(pill('+ ' + c.addition, 'aa-pill-new'));
+        if (c.addition) change.append(pill('+ ' + c.addition, 'aa-pill-bad')); // solo existe con batería < 60%
         else {
           // Verde cuando se agrega algo; un "No"/"Ninguno" se muestra neutro, como en el diseño.
           const negative = c.proposed === false || c.proposed === 'None';
@@ -217,8 +234,7 @@
     const actions = openPanel(subtitle, parts);
     const apply = el('button', 'Aplicar cambios', 'aa-btn-primary');
     apply.type = 'button';
-    apply.disabled = shown.length === 0;
-    actions.append(apply);
+    actions.append(apply); // sin cambios igual sirve: lleva a Hardware check y Damages
     apply.addEventListener('click', async () => {
       if (busy) return;
       apply.disabled = true;
@@ -247,7 +263,17 @@
       } finally {
         busy = btn.disabled = false;
       }
-      actions.prepend(el('span', 'Listo. Revisa y pulsa Save.', 'aa-done'));
+      // Si algo falló, el panel se queda abierto para que se vea qué; si no, se cierra y sigue con Damages.
+      const failed = shown.filter(c => statusById[c.target.id].textContent.startsWith('✘')).length;
+      if (failed) {
+        actions.prepend(el('span', '✘ ' + plural(failed, 'campo no se aplicó', 'campos no se aplicaron') +
+          '. Revísalo a mano; no se abrió Damages.', 'aa-done aa-warn'));
+        return;
+      }
+      closePanel();
+      const opened = goToDamages(document);
+      toast((todo.length ? '✔ ' + plural(todo.length, 'cambio aplicado', 'cambios aplicados') + '. ' : '') +
+        (opened ? 'Agrega los daños y pulsa Save.' : 'No se encontró el botón Add de Damages. Revisa y pulsa Save.'));
     });
   }
 })();
