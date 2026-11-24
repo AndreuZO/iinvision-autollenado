@@ -97,7 +97,9 @@ async function applyChange(doc, change) {
     loc.area.blur();
   }
   else await pickComboOption(doc, loc.input, v);
-  return readValue(loc) === v;
+  // Los atributos se guardan al instante y Angular vuelve a dibujar la fila: el elemento
+  // viejo queda vacío. Se busca de nuevo y se espera a que el guardado termine.
+  return !!await waitFor(() => { const now = locate(doc, change.target.id); return now && readValue(now) === v; });
 }
 
 // Traducción de Chrome: reemplaza los textos de la página y la extensión lee textos
