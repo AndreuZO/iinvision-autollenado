@@ -209,6 +209,12 @@ test('HDMI y SD sin dato en el reporte -> 1 por defecto, marcado como defaulted'
     [['apply', '1', true], ['apply', '1', true]]);
 });
 
+test('HDMI y SD en 0 cuentan como vacíos -> se proponen 1', () => {
+  const r = plan({ ...empty(), 'combo:HDMI Ports': '0', 'combo:SD Card Slots': '0' });
+  assert.deepEqual([find(r, 'combo:HDMI Ports'), find(r, 'combo:SD Card Slots')].map(c => [c.action, c.proposed]),
+    [['apply', '1'], ['apply', '1']]);
+});
+
 test('HDMI del reporte no es defaulted', () => {
   const r = planChanges(proposeValues(require('./fixtures/m70a-aio.json'), ''), { 'combo:HDMI Ports': '' }, 'TESTSERIAL2', 'PC - All-In-One');
   assert.deepEqual([r.changes[0].proposed, r.changes[0].defaulted], ['1', false]);

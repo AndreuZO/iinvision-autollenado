@@ -111,7 +111,8 @@ function actionFor(target, current, proposed) {
   if (proposed === null) return 'undetermined';
   if (current === proposed) return 'same';
   const isEmpty = current === 'unspecified' || current === '' ||
-    (target.id.startsWith('chk:') && current === false);
+    (target.id.startsWith('chk:') && current === false) ||
+    (target.key in DEFAULTS && current === '0'); // iinvision trae HDMI/SD en 0 de fábrica (pedido del auditor)
   return isEmpty ? 'apply' : 'conflict';
 }
 
