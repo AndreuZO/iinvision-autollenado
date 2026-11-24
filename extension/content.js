@@ -76,7 +76,7 @@
   // se cierra al cambiar de página para no aplicar datos de otro equipo.
   setInterval(() => {
     btn.hidden = !onItemPage();
-    if (location.pathname !== lastPath) { lastPath = location.pathname; closePanel(); btn.classList.remove('aa-btn-done'); }
+    if (location.pathname !== lastPath) { lastPath = location.pathname; closePanel(); btn.classList.remove('aa-btn-done'); btn.textContent = 'Autollenar'; }
   }, 1000);
   btn.hidden = !onItemPage();
 
@@ -272,7 +272,9 @@
         return;
       }
       // Verde solo si todo lo propuesto quedó aplicado (nada sin confirmar ni cambiado a medias).
-      btn.classList.toggle('aa-btn-done', shown.every(c => statusById[c.target.id].textContent === '✔ Aplicado'));
+      const done = shown.every(c => statusById[c.target.id].textContent === '✔ Aplicado');
+      btn.classList.toggle('aa-btn-done', done);
+      btn.textContent = done ? 'Autollenado' : 'Autollenar';
       closePanel();
       const opened = await goToDamages(document);
       toast((todo.length ? '✔ ' + plural(todo.length, 'cambio aplicado', 'cambios aplicados') + '. ' : '') +
