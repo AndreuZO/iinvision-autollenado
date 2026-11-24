@@ -63,17 +63,7 @@
   const btn = document.createElement('button');
   btn.id = 'aa-btn';
   btn.type = 'button';
-  const btnTitle = el('strong', 'Autollenar', 'aa-btn-title');
-  const btnSub = el('span', 'Leer reporte de Blancco', 'aa-btn-sub');
-  const btnText = el('span', null, 'aa-btn-text');
-  btnText.append(btnTitle, btnSub);
-  btn.append(icon('bolt', 'aa-btn-icon'), btnText, el('span', null, 'aa-btn-dot'));
-  // Verde con "Autollenado" cuando todo lo propuesto quedó aplicado.
-  const setDone = done => {
-    btn.classList.toggle('aa-btn-done', done);
-    btnTitle.textContent = done ? 'Autollenado' : 'Autollenar';
-    btnSub.textContent = done ? 'Cambios aplicados' : 'Leer reporte de Blancco';
-  };
+  btn.textContent = 'Autollenar';
   btn.setAttribute('translate', 'no');
   btn.addEventListener('click', run);
   document.body.appendChild(btn);
@@ -86,7 +76,7 @@
   // se cierra al cambiar de página para no aplicar datos de otro equipo.
   setInterval(() => {
     btn.hidden = !onItemPage();
-    if (location.pathname !== lastPath) { lastPath = location.pathname; closePanel(); setDone(false); }
+    if (location.pathname !== lastPath) { lastPath = location.pathname; closePanel(); btn.classList.remove('aa-btn-done'); btn.textContent = 'Autollenar'; }
   }, 1000);
   btn.hidden = !onItemPage();
 
@@ -283,7 +273,8 @@
       }
       // Verde solo si todo lo propuesto quedó aplicado (nada sin confirmar ni cambiado a medias).
       const done = shown.every(c => statusById[c.target.id].textContent === '✔ Aplicado');
-      setDone(done);
+      btn.classList.toggle('aa-btn-done', done);
+      btn.textContent = done ? 'Autollenado' : 'Autollenar';
       closePanel();
       const opened = await goToDamages(document);
       toast((todo.length ? '✔ ' + plural(todo.length, 'cambio aplicado', 'cambios aplicados') + '. ' : '') +
