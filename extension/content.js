@@ -76,7 +76,7 @@
   // se cierra al cambiar de página para no aplicar datos de otro equipo.
   setInterval(() => {
     btn.hidden = !onItemPage();
-    if (location.pathname !== lastPath) { lastPath = location.pathname; closePanel(); }
+    if (location.pathname !== lastPath) { lastPath = location.pathname; closePanel(); btn.classList.remove('aa-btn-done'); }
   }, 1000);
   btn.hidden = !onItemPage();
 
@@ -270,8 +270,10 @@
           '. Revísalo a mano; no se abrió Damages.', 'aa-done aa-warn'));
         return;
       }
+      // Verde solo si todo lo propuesto quedó aplicado (nada sin confirmar ni cambiado a medias).
+      btn.classList.toggle('aa-btn-done', shown.every(c => statusById[c.target.id].textContent === '✔ Aplicado'));
       closePanel();
-      const opened = goToDamages(document);
+      const opened = await goToDamages(document);
       toast((todo.length ? '✔ ' + plural(todo.length, 'cambio aplicado', 'cambios aplicados') + '. ' : '') +
         (opened ? 'Agrega los daños y pulsa Save.' : 'No se encontró el botón Add de Damages. Revisa y pulsa Save.'));
     });

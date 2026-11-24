@@ -6,6 +6,7 @@
   box-shadow: 0 4px 14px rgba(29, 78, 216, .4);
 }
 #aa-btn[hidden] { display: none; }
+#aa-btn.aa-btn-done { background: #16a34a; box-shadow: 0 4px 14px rgba(22, 163, 74, .4); } /* todo aplicado */
 .aa-panel {
   position: fixed; right: 20px; bottom: 68px; z-index: 99999;
   width: 400px; max-width: calc(100vw - 40px); max-height: 60vh;
